@@ -30,6 +30,8 @@ from src.utils import load_config
 RUNS = Path("runs")
 DECISIONS = Path("results/decisions.json")
 E0_MIN_MIOU = 0.7
+MAX_ATTEMPTS = 30
+TRANSIENT_ERRORS = ("MPS command buffer", "AcceleratorError", "kIOGPUCommandBufferCallbackError")
 
 
 def log(msg: str) -> None:
@@ -71,13 +73,23 @@ def train(name: str, config: str, overrides: list[str] | None = None) -> float:
         return best_val(name)
     log(f"start {name}: {config} {' '.join(overrides)}")
     t0 = time.time()
-    with (RUNS / f"{name}.log").open("a") as f:
-        rc = subprocess.call([sys.executable, "-m", "src.train", "--config", config, "--set", *overrides],
-                             stdout=f, stderr=subprocess.STDOUT)
-    if rc != 0:
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        with (RUNS / f"{name}.log").open("a") as f:
+            rc = subprocess.call([sys.executable, "-W", "ignore", "-m", "src.train", "--config", config,
+                                  "--set", *overrides], stdout=f, stderr=subprocess.STDOUT)
+        if rc == 0:
+            break
+        tail = (RUNS / f"{name}.log").read_text()[-3000:]
+        # macOS GPU watchdog ("Impacting Interactivity") kills long MPS command buffers at random;
+        # train.py resumes from last.pt, so retrying loses at most one epoch.
+        if any(s in tail for s in TRANSIENT_ERRORS) and attempt < MAX_ATTEMPTS:
+            log(f"retry {name} after transient GPU error (attempt {attempt}/{MAX_ATTEMPTS})")
+            time.sleep(30)
+            continue
         log(f"FAILED {name} (exit {rc}); see runs/{name}.log")
         raise SystemExit(rc)
     v = best_val(name)
+    (run_dir(name) / "last.pt").unlink(missing_ok=True)  # only needed for resume; saves disk
     log(f"done {name} in {(time.time() - t0) / 3600:.2f} h, best val mIoU {v:.4f}")
     return v
 
