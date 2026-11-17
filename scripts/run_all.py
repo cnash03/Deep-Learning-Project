@@ -2,6 +2,8 @@
 model-selection decisions from build.md automatically and only from VAL mIoU.
 
     caffeinate -is python -m scripts.run_all            # resumable: finished runs are skipped
+    python -m scripts.run_all --runs-dir /content/drive/MyDrive/rtt/runs \
+        --results-dir /content/drive/MyDrive/rtt/results --set train.num_workers=8   # Colab
 
 Stages:
   1. E0 overfit sanity check (aborts everything if it fails)
@@ -17,6 +19,7 @@ Every decision is appended to results/decisions.json.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import subprocess
 import sys
@@ -28,7 +31,9 @@ import yaml
 from src.utils import load_config
 
 RUNS = Path("runs")
-DECISIONS = Path("results/decisions.json")
+RESULTS = Path("results")
+DECISIONS = RESULTS / "decisions.json"
+EXTRA: list[str] = []  # overrides applied to every run (e.g. train.num_workers=8)
 E0_MIN_MIOU = 0.7
 MAX_ATTEMPTS = 30
 TRANSIENT_ERRORS = ("MPS command buffer", "AcceleratorError", "kIOGPUCommandBufferCallbackError")
@@ -67,7 +72,7 @@ def best_val(name: str) -> float:
 
 
 def train(name: str, config: str, overrides: list[str] | None = None) -> float:
-    overrides = [f"run_name={name}", *(overrides or [])]
+    overrides = [f"run_name={name}", f"train.out_dir={RUNS}", *EXTRA, *(overrides or [])]
     if is_done(name, config, overrides):
         log(f"skip {name} (done, best val mIoU {best_val(name):.4f})")
         return best_val(name)
@@ -95,7 +100,15 @@ def train(name: str, config: str, overrides: list[str] | None = None) -> float:
 
 
 def main():
-    RUNS.mkdir(exist_ok=True)
+    global RUNS, RESULTS, DECISIONS, EXTRA
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--runs-dir", default="runs")
+    ap.add_argument("--results-dir", default="results")
+    ap.add_argument("--set", nargs="*", default=[], help="overrides applied to every run")
+    args = ap.parse_args()
+    RUNS, RESULTS = Path(args.runs_dir), Path(args.results_dir)
+    DECISIONS, EXTRA = RESULTS / "decisions.json", args.set
+    RUNS.mkdir(parents=True, exist_ok=True)
 
     # 1. Sanity check
     train("e0_overfit", "configs/e0_overfit.yaml")
@@ -153,11 +166,12 @@ def main():
 
     # 8. Val evaluation of every run
     for name in res:
-        out = Path("results") / name / "val" / "summary.json"
+        out = RESULTS / name / "val" / "summary.json"
         if out.exists():
             continue
         log(f"evaluate {name} on val")
-        subprocess.check_call([sys.executable, "-m", "src.evaluate", "--run", str(run_dir(name)), "--split", "val"],
+        subprocess.check_call([sys.executable, "-m", "src.evaluate", "--run", str(run_dir(name)), "--split", "val",
+                               "--out", str(RESULTS), "--per-image", "--boundary-band", "1", "3", "5"],
                               stdout=subprocess.DEVNULL)
     log("ALL TRAINING DONE")
 

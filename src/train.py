@@ -55,6 +55,8 @@ def main():
 
     seed_everything(cfg.get("seed", 0))
     device = get_device()
+    if device.type == "cuda":
+        torch.backends.cudnn.benchmark = True  # fixed input size -> pick fastest conv kernels
     amp = cfg["train"].get("amp", True) and device.type == "cuda"
     tc = cfg["train"]
 
