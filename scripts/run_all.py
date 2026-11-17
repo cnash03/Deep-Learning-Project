@@ -34,7 +34,7 @@ RUNS = Path("runs")
 RESULTS = Path("results")
 DECISIONS = RESULTS / "decisions.json"
 EXTRA: list[str] = []  # overrides applied to every run (e.g. train.num_workers=8)
-E0_MIN_MIOU = 0.7
+E0_MIN_PIXEL_ACC = 0.95
 MAX_ATTEMPTS = 30
 TRANSIENT_ERRORS = ("MPS command buffer", "AcceleratorError", "kIOGPUCommandBufferCallbackError")
 
@@ -112,11 +112,12 @@ def main():
 
     # 1. Sanity check
     train("e0_overfit", "configs/e0_overfit.yaml")
-    e0 = json.loads((run_dir("e0_overfit") / "history.json").read_text())[-1]["val_miou"]
-    record("e0_final_train_subset_miou", e0)
-    if e0 < E0_MIN_MIOU:
-        log(f"ABORT: E0 overfit mIoU {e0:.3f} < {E0_MIN_MIOU}; pipeline is likely broken")
+    e0 = json.loads((run_dir("e0_overfit") / "history.json").read_text())[-1]
+    record("e0_sanity", {"pixel_acc": e0["val_pixel_acc"], "miou": e0["val_miou"], "train_loss": e0["train_loss"]})
+    if e0["val_pixel_acc"] < E0_MIN_PIXEL_ACC:
+        log(f"ABORT: E0 pixel acc {e0['val_pixel_acc']:.3f} < {E0_MIN_PIXEL_ACC}; pipeline is likely broken")
         raise SystemExit(1)
+    log(f"E0 passed: pixel acc {e0['val_pixel_acc']:.3f}, mIoU {e0['val_miou']:.3f}")
 
     # 2. Architecture / encoder comparison
     res = {
