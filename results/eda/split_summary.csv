@@ -1,0 +1,4 @@
+split,sequences,frames,labeled_pixels,pct_tree,pct_grass,pct_mulch,pct_gravel,pct_sky,pct_bush,pct_other,pct_safety_classes,classes_absent,sequence_names
+train,12,4779,1807979701,39.334,23.851,11.307,8.97,8.218,2.374,5.946,1.106,bridge,park-2;trail;trail-3;trail-4;trail-6;trail-9;trail-10;trail-11;trail-12;trail-14;trail-15;village
+val,2,733,277205753,43.027,21.4,15.733,5.501,6.323,1.071,6.944,1.169,sand;rock-bed;bicycle;bridge,park-8;trail-5
+test,4,1924,727960520,35.686,20.174,6.699,2.374,7.115,11.568,16.384,10.292,bicycle,creek;park-1;trail-7;trail-13
