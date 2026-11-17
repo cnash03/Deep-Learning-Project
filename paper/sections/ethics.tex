@@ -1,107 +1,83 @@
 \section{Ethical Considerations}
 \label{sec:ethics}
 
-\textbf{Representativeness and bias.} RUGD covers a small set of parks, trails,
-a creek, and a village area, recorded by one small robot whose camera sits
-under 25\,cm above the ground~\cite{wigness2019rugd}. Season, geography,
-weather, and time of day are therefore narrowly sampled. Snow, mud, desert,
-night, and heavy rain are absent or rare, and RUGD has no \emph{mud} class at
-all. A model trained here may look reliable on similar trails yet fail
-silently on terrain, vegetation, or viewpoints it has never seen, such as the
-much higher camera of a full-size vehicle. A segmentation model has no
-demographic attributes in the usual sense, but the same principle applies: the
-model's error rates differ across environments, and the environments that are
-under-represented in the data are also the ones with the least evidence about
-its behavior. We report per-class and per-sequence results, not only mIoU, so
-that these disparities stay visible.
+\textbf{Representativeness and bias.} RUGD covers a few parks, trails, a
+creek, and a village, recorded by one small robot with a camera under 25\,cm
+above the ground~\cite{wigness2019rugd}. Season, geography, weather, and time
+of day are narrowly sampled; snow, desert, night, and heavy rain are absent,
+and there is no \emph{mud} class. A model trained here may look reliable on
+similar trails yet fail silently on unseen terrain or on the higher viewpoint
+of a full-size vehicle. A segmentation model has no demographic attributes, but
+the same principle applies: error rates differ across environments, and
+under-represented environments carry the least evidence. Even within RUGD,
+test hazards come almost entirely from one creek sequence, and people cover
+only 0.012\% of training pixels, so rare-class and \emph{person} IoU are weak
+evidence and must not be read as evidence of pedestrian safety. We therefore
+report per-class and per-sequence results, not only mIoU.
 
-\textbf{Safety.} The costliest errors in this task are false negatives on
-hazards: water labeled as drivable ground, or a log absorbed into the
-surrounding grass. These are also among the rarest classes, so a model can
-reach a high mIoU while still missing them. Our models are research artifacts
-evaluated offline on a fixed benchmark. They are \emph{not} safety systems and
-should not be used to make driving decisions without independent validation,
-calibrated uncertainty, redundant sensing (\eg LiDAR), and a conservative
-planner. For the same reason, any driver-assist use of this kind of model
-should present it as advisory only.
-
-\textbf{Dual use.} Both datasets were produced with U.S. Army Research
-Laboratory involvement~\cite{wigness2019rugd,jiang2021rellis}, and off-road
-autonomy has clear military applications alongside search-and-rescue,
-agriculture, and planetary exploration. Terrain segmentation is a
-general-purpose perception capability rather than a weapon, but we note this
-dual-use context explicitly and limit our work to openly published methods and
-data.
-
-\textbf{Licensing and privacy.} RELLIS-3D is released under the Creative
-Commons Attribution-NonCommercial-ShareAlike 3.0 license~\cite{jiang2021rellis}.
-Any model weights or derived data that touch it are therefore for
-non-commercial research use and must be shared under the same terms. We use
-RUGD under its authors' research-use distribution and do not redistribute
-either dataset's images. RUGD includes a \emph{person} class, so some frames
-show people. Our figures avoid identifiable individuals. Photographs we took
-for the demo have their EXIF and GPS metadata removed and are framed to exclude
-people and license plates.
+\textbf{Safety, dual use, licensing, and privacy.} The costliest errors are
+missed hazards, such as water labeled as drivable ground, and these are the
+rarest classes, so a high mIoU can hide them. Our models are research artifacts
+evaluated offline, \emph{not} safety systems, and any driver-assist use would
+need independent validation, calibrated uncertainty, redundant sensing, and an
+advisory-only role. Both datasets involved the U.S. Army Research
+Laboratory~\cite{wigness2019rugd,jiang2021rellis}, and off-road autonomy has
+military as well as civilian uses; we use only openly published methods and
+data. RELLIS-3D is licensed CC BY-NC-SA 3.0~\cite{jiang2021rellis}, so anything
+derived from it is non-commercial and shared alike; neither dataset's images
+are redistributed. No legible faces or plates appeared in inspected frames,
+our figures avoid identifiable people, and demo photographs are stripped of
+EXIF/GPS metadata and framed to exclude people and license plates.
 
 \subsection{Updated Risk and Ethics Reflection}
 \label{sec:reflection}
 
-Table~\ref{tab:risks} compares the risks anticipated in our proposal with what
-actually emerged and how we handled each.
+Table~\ref{tab:risks} compares the risks anticipated in our proposal with
+what emerged and how each was handled.
 
 \begin{table*}[t]
   \centering
-  \caption{Updated risk and ethics reflection: anticipated risks, what emerged, and how each was handled.}
+  \caption{Updated risk and ethics reflection: anticipated (A) and newly emerged (N) issues and how each was handled.}
   \label{tab:risks}
   \footnotesize
-  \renewcommand{\arraystretch}{1.15}
-  \begin{tabular}{@{}p{3.0cm} p{6.6cm} p{7.2cm}@{}}
+  \begin{tabular}{@{}p{2.9cm} p{6.7cm} p{7.2cm}@{}}
     \toprule
     Issue & What emerged & How it was managed \\
     \midrule
-    Class imbalance (anticipated) &
-      Worse than expected: \emph{tree} + \emph{grass} cover 63\% of labeled
-      training pixels, and three classes have $<0.02\%$ each
-      (Fig.~\ref{fig:classfreq}). &
-      Four imbalance-aware losses compared against CE (E4--E7);
-      median-frequency weights computed on train only and clipped at 50;
-      per-class IoU reported alongside mIoU. \\
-    Test-only class (new) &
-      \emph{Bridge} has 0 training pixels but about 4.6\,M test pixels, so no
-      model trained on the official split can learn it. &
-      Excluded from headline mIoU with stated justification, still reported per
-      class, and mIoU with \emph{bridge} included is also computed. The official
-      split was kept, not re-drawn, to preserve comparability. \\
-    Incomplete validation split (new) &
-      Validation has no \emph{sand}, \emph{rock-bed}, \emph{bicycle}, or
-      \emph{bridge} pixels, and test has no \emph{bicycle}. &
-      Disclosed. Validation and test mIoU are reported separately and not
-      treated as interchangeable. Model selection is still validation-only;
-      the test split is guarded by an explicit flag and used once. \\
-    Frame leakage (anticipated) &
-      Consecutive frames are near-duplicates, so a random frame split would
-      overstate accuracy. &
-      Official sequence-level split, verified against the released files (no sequence in two
-      splits; 4,779/733/1,924 frames). A 20-frame discrepancy with the RUGD
-      paper's printed counts was noted. \\
-    Ambiguous labels (anticipated) &
-      Fuzzy grass/mulch/bush boundaries and blurred frames (\emph{trail-7}). &
-      Nearest-neighbor mask resizing; boundary-band ablation in
-      Section~\ref{sec:error}; discussed as a limitation. \\
-    Compute (anticipated) &
-      Training moved to an Apple M1 Pro (MPS); $512^2$ was about $1.9\times$
-      slower than $384^2$, and mixed precision gave no speedup. &
-      $384^2$ / 25 epochs for \emph{all} runs, so comparisons stay fair; the
-      deviation from the proposal is disclosed (Section~\ref{sec:compute}). \\
-    Domain shift (anticipated) &
-      Low robot viewpoint; RUGD and RELLIS-3D class sets differ (\eg \emph{mud},
-      \emph{puddle} exist only in RELLIS-3D). &
-      Shared six-group map fixed in code before evaluation; cross-dataset
-      result treated as analysis, not a requirement. \todo{update with outcome}\\
-    Safety and dual use &
-      Rare hazards are the classes most likely to be missed. &
-      Rare-class IoU reported explicitly; models described as research
-      artifacts, not safety systems; dual-use context stated. \\
+    Class imbalance (A) &
+      Worse than expected: 6,382:1 between \emph{tree} and \emph{sign};
+      safety classes 1.1\% of training pixels. &
+      Four imbalance-aware losses vs.\ CE; train-only median-frequency weights,
+      clipped at 50; per-class IoU reported. \\
+    Split shift (N) &
+      \emph{Bridge} only in test; validation lacks four classes; test is
+      hazard-heavy (safety classes 10.3\% vs.\ 1.1\%), driven by \emph{creek};
+      val closer to train than to test. &
+      Official split kept for comparability; \emph{bridge} excluded from headline
+      mIoU but reported; val and test reported separately; test per-class IoU;
+      test guarded by a flag and used once. \\
+    Leakage and labels (A) &
+      Labeled frames are near-duplicates (every fifth video frame); coarse
+      polygons, wires labeled \emph{tree}, sticks labeled \emph{log},
+      near-identical concrete/rock-bed colors. &
+      Sequence-level split verified (20-frame discrepancy with~\cite{wigness2019rugd}
+      disclosed); boundary-band analysis (Section~\ref{sec:error}); palette
+      caveat in captions. \\
+    Compute (A) &
+      Apple M1 Pro too slow at $512^2$ and unstable in validation; Colab T4
+      sessions capped at about 12\,h. &
+      $384^2$/25 epochs for \emph{all} runs; mixed precision on T4; per-epoch
+      checkpoints on Drive with automatic resume (Section~\ref{sec:compute}). \\
+    Domain shift (A) &
+      Different vehicle, viewpoint, and label mix in RELLIS-3D; \emph{mud} has
+      no RUGD counterpart. &
+      Group map fixed before evaluation; mud ignored in the headline score with
+      a sensitivity check; zero-shot only. \todo{update with outcome} \\
+    Safety, dual use, licensing &
+      Rare hazards are the most likely misses; Army-funded data;
+      RELLIS-3D is CC BY-NC-SA 3.0. &
+      Rare-class IoU reported; models presented as research artifacts;
+      non-commercial use; no redistribution of images. \\
     \bottomrule
   \end{tabular}
 \end{table*}

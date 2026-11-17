@@ -8,13 +8,14 @@
 %   results/<run>/{val,test}/per_class_iou.csv, confusion.npy
 % Test numbers only for the final configurations, evaluated once.
 
-\textbf{Validation strategy.} All model and loss selection uses the 733-frame
-validation split (Section~\ref{sec:protocol}), and every number in
-Table~\ref{tab:main} except the test columns comes from validation.
-Because validation lacks four classes (\emph{sand}, \emph{rock-bed},
-\emph{bicycle}, \emph{bridge}), validation mIoU averages over fewer classes
-than test mIoU, and the two are not interchangeable. We therefore report both,
-and we treat the validation-to-test gap as a finding rather than a bug.
+\textbf{Validation strategy and threats to validity.} All selection uses the
+733-frame validation split, and every number in Table~\ref{tab:main} except
+the test columns comes from it. Validation lacks four classes and is closer in
+class composition to training than to test (total-variation distance 0.114
+versus 0.246; Section~\ref{sec:data}), and test water and rock-bed come almost
+entirely from the unseen \emph{creek} scene. Validation scores are therefore
+likely to overstate test scores, so we report test IoU per class, not only
+test mIoU, and treat the validation-to-test gap as a finding.
 
 \textbf{Sanity check (E0).} \todo{E0 result: final mIoU on the 50-image
 training subset after 100 epochs (threshold 0.70), and the training loss.}
@@ -81,7 +82,7 @@ frequent classes (tree, grass, mulch) or pixel accuracy.}
 \subsection{ImageNet Pretraining and Seed Variance}
 \label{sec:res_pretrain}
 
-\todo{E8 vs.\ its pretrained counterpart: absolute mIoU gap under the same
+\todo{E8 vs.\ its pretrained counterpart (Fig.~\ref{fig:curves}): absolute mIoU gap under the same
 25-epoch budget, and which classes suffer most. E9: mean $\pm$ std of
 val and test mIoU for the two best configurations. Say whether the
 differences reported in Sections~\ref{sec:res_arch}--\ref{sec:res_loss}
@@ -107,8 +108,10 @@ note which group gains most from coarsening.}
 \subsection{Cross-Dataset Test on RELLIS-3D (Stretch Goal)}
 \label{sec:res_rellis}
 
-\todo{If run: RUGD-trained final model evaluated zero-shot on the RELLIS-3D
-test split through the shared group map (Table~\ref{tab:groups}); report group
-mIoU on RUGD test vs.\ RELLIS-3D test, and the per-group drop. If not run,
-replace this subsection with one sentence in Section~\ref{sec:discussion}
-stating that it was cut and why.}
+\todo{Zero-shot result of the final model on the 1,672-frame RELLIS-3D test
+split (Section~\ref{sec:metrics}): group IoU and group mIoU with \emph{mud}
+ignored (headline) and with mud scored as rough ground (sensitivity), next to
+the same model's group IoU on RUGD test; per-group drop, especially water
+(RELLIS-3D water is mostly \emph{puddle}) and sky/vegetation, whose shares
+differ most between the datasets. If not run, replace this subsection with one
+sentence in Section~\ref{sec:discussion}.}

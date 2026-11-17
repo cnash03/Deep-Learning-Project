@@ -26,7 +26,9 @@ water$\rightarrow$\,?), and whether errors stay within a traversability group
 
 \todo{Per-sequence test mIoU (creek, park-1, trail-7, trail-13): test whether
 the motion-blurred trail-7 and the rock-bed-heavy creek are the hardest
-sequences, as the RUGD authors intended~\cite{wigness2019rugd}. Describe the
+sequences, as the RUGD authors intended~\cite{wigness2019rugd}. Because creek
+holds 97.9\% of all rock-bed and 76.3\% of all water pixels
+(Section~\ref{sec:data}), separate its contribution to the rare-class IoU. Describe the
 worst frames in Fig.~\ref{fig:gallery}: blur, shade/overexposure, water
 reflections, and unseen bridge structures.}
 
@@ -35,7 +37,9 @@ reflections, and unseen bridge structures.}
   \placeholderfig{5.0cm}{Worst-frame gallery: 4 rows (lowest per-frame mIoU
   on test, one per failure type) $\times$ 4 columns: image $\mid$ ground
   truth $\mid$ prediction $\mid$ error map (correct / wrong / void).}
-  \caption{Representative failure cases on the RUGD test split.
+  \caption{Representative failure cases on the RUGD test split. Masks use the
+  official palette, in which \emph{concrete} and \emph{rock-bed} look nearly
+  identical. \todo{or recolor one of them in scripts/gallery.py and say so}
   \todo{one line per row describing the failure mode}}
   \label{fig:gallery}
 \end{figure*}
@@ -45,7 +49,8 @@ reflections, and unseen bridge structures.}
 \todo{mIoU with and without a thin band (\tbd\ px at $384^2$) around label
 boundaries excluded from scoring. A large gap indicates that much of the
 remaining error comes from ambiguous transitions (grass/mulch, bush/tree)
-rather than from misrecognized regions.}
+rather than from misrecognized regions, as the coarse polygon labels
+(Section~\ref{sec:data}) suggest.}
 
 \subsection{Classes the Data Cannot Support}
 

@@ -89,7 +89,7 @@ def main(argv=None):
 
     if args.cross_rellis:
         size = cfg["data"]["img_size"]
-        # Match RUGD's train-time squeeze (688x550 -> square = 0.8 horizontal/vertical): 1920x1200 -> 384x480.
+        # Approximate RUGD's train-time squeeze (688x550 -> 384x384: 0.80); 1920x1200 -> 384x480 gives 0.78.
         cfg["data"] = {**cfg["data"], "name": "rellis", "root": args.cross_rellis,
                        "eval_size": [size, int(round(size * 1.25 / 32)) * 32]}
     ds = build_dataset(cfg, args.split, train=False)

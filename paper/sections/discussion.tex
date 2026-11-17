@@ -13,22 +13,22 @@ against mIoU, and the size of the pretraining benefit.}
 zero IoU regardless of loss, and the validation-to-test gap.} Some limitations
 are structural rather than methodological. Validation lacks four classes, so
 model selection cannot reward improvements on \emph{sand}, \emph{rock-bed},
-\emph{bicycle}, or \emph{bridge}. The reduced $384^2$, 25-epoch schedule
+\emph{bicycle}, or \emph{bridge}, and its class mix is closer to training
+than to test, so it is an optimistic proxy. The test split's rare hazards come
+almost entirely from one sequence, which makes their IoU a high-variance
+estimate. The reduced $384^2$, 25-epoch schedule
 (Section~\ref{sec:compute}) limits thin-structure accuracy and may understate
 what each configuration can reach. With three seeds for only two
 configurations, we can bound run-to-run noise only roughly.
 
 \subsection{Future Work}
 
-Several extensions follow directly from our findings. (i)~Train at native
-resolution or with sliding-window inference to recover thin obstacles such as
-poles, signs, and log edges. (ii)~Move a few validation sequences, or use
-sequence-level cross-validation, so that validation covers every trainable
-class. (iii)~Add temporal consistency across consecutive frames, which RUGD's
-video format makes possible. (iv)~Compare against transformer backbones and
-group-aware objectives such as GA-Nav~\cite{guan2022ganav}. (v)~Calibrate
-predictive uncertainty so that a planner can treat low-confidence water or
-obstacle pixels conservatively. (vi)~Fine-tune on a small labeled RELLIS-3D
-subset to measure how much target data closes the cross-dataset gap.
-\todo{Adjust this list to the actual results; drop items the results make
-moot.}
+(i)~Train at native resolution or with sliding-window inference to recover
+thin obstacles. (ii)~Re-split or use sequence-level cross-validation so that
+validation covers every trainable class and matches the test class mix.
+(iii)~Exploit temporal consistency across RUGD's video frames. (iv)~Compare
+transformer backbones and group-aware objectives such as
+GA-Nav~\cite{guan2022ganav}. (v)~Calibrate uncertainty so a planner can treat
+low-confidence water or obstacle pixels conservatively. (vi)~Fine-tune on a
+small RELLIS-3D subset, drawn by sequence rather than by frame, to measure how
+much target data closes the cross-dataset gap. \todo{Adjust to the results.}

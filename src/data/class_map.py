@@ -4,8 +4,8 @@ Used for (a) traversability-group IoU on RUGD and (b) the cross-dataset test:
 a RUGD-trained model's predictions are mapped to groups and scored against
 RELLIS-3D labels mapped the same way.
 
-Group assignments are a project decision. Revisit them in Week 1 and record
-the final choice in the paper's Methods section.
+Group assignments are a project decision, documented in the paper's Methods
+section (Table of traversability groups).
 """
 from __future__ import annotations
 

@@ -10,23 +10,23 @@ small vehicle shakes and blurs as it crosses rough
 ground~\cite{wigness2019rugd}. Yet many high-value uses of autonomy happen
 off-road: search-and-rescue and disaster-relief robots, agricultural and
 forestry vehicles, planetary rovers, and military logistics. For these
-systems, distinguishing drivable dirt from standing water or a fallen log is a
-central perception problem, and a mistake can leave a vehicle stuck or damaged.
-The same capability could also support driver-assist cameras on consumer
-off-road vehicles that warn about water crossings, loose rock, or obstacles
-before the driver commits to a line.
+systems, and for driver-assist cameras on consumer off-road vehicles,
+distinguishing drivable dirt from standing water or a fallen log is a central
+perception problem, and a mistake can leave a vehicle stuck or damaged.
 
 We treat terrain understanding as \emph{semantic segmentation}: assign each
 pixel of a forward-facing camera image one of the 24 terrain and object
 classes of the RUGD dataset~\cite{wigness2019rugd}. Two properties make this
 harder than urban segmentation. First, the label distribution is extremely
-skewed: in the RUGD training split, \emph{tree} and \emph{grass} cover 63\% of non-void
-labeled pixels, while \emph{water}, \emph{rock}, and \emph{log} together
-cover under 0.8\% (Fig.~\ref{fig:classfreq}), even though these rare classes
-are the ones most relevant to safe driving. Second, RUGD is small (7,436
-annotated frames from 18 video sequences) and its frames are strongly
-correlated in time, so careless splitting would leak near-duplicate frames
-between training and test.
+skewed: in the RUGD training split, \emph{tree} and \emph{grass} cover 63\% of
+labeled pixels, the most and least frequent classes differ by a factor of
+6,382, and \emph{water}, \emph{rock}, and \emph{log} together cover 0.72\%
+(Fig.~\ref{fig:classfreq}), even though these rare classes are the ones most
+relevant to safe driving. Second, RUGD is small (7,436 annotated frames from 18
+video sequences), its frames are strongly correlated in time, and its official
+splits differ in composition: hazardous terrain is about nine times more common
+in the test split than in training, so validation scores are an optimistic
+guide to test performance.
 
 This project asks three questions that transfer beyond off-road driving:
 (i)~how much do the decoder design and the encoder depth matter when both
@@ -42,23 +42,19 @@ Our contributions are:
   \item A controlled comparison of U-Net~\cite{ronneberger2015unet} and
         DeepLabV3+~\cite{chen2018deeplabv3plus} with ImageNet-pretrained
         ResNet-18/50 encoders~\cite{he2016resnet} on RUGD, changing one factor
-        per experiment and selecting models on the validation split only. We
-        find that \todo{architecture/encoder finding}.
-  \item A comparison of four imbalance-aware losses (median-frequency weighted
-        cross-entropy, Dice, focal, and cross-entropy plus Dice) against plain
-        cross-entropy, reported per class with emphasis on rare,
-        safety-relevant terrain. \todo{loss finding, e.g., which loss improves
-        water/log/rock IoU and at what cost to mIoU}.
-  \item An ablation of ImageNet pretraining and a multi-seed estimate of
+        per experiment with automated, validation-only model selection.
+        \todo{architecture/encoder finding}.
+  \item A per-class comparison of four imbalance-aware losses (median-frequency
+        weighted cross-entropy, Dice, focal, cross-entropy plus Dice) against
+        plain cross-entropy, focused on rare, safety-relevant terrain.
+        \todo{loss finding: which loss improves water/log/rock IoU, at what cost}.
+  \item An ablation of ImageNet pretraining and a three-seed estimate of
         run-to-run variance for the two strongest configurations.
         \todo{pretraining gap and seed std}.
-  \item An error analysis built on the normalized confusion matrix, worst-frame
-        galleries, and a six-group traversability evaluation, together with a
-        documented account of the data-integrity issues we found in RUGD, such
-        as a class that appears only in the test split and a validation split
-        that lacks four classes.
-        \todo{RELLIS-3D cross-dataset result, if completed.}
-  \item An open, configuration-driven pipeline in which every experiment is a
-        YAML file and every model-selection decision is made automatically
-        from validation scores and logged.
+  \item An exploratory and error analysis that documents RUGD's split shift
+        (a test-only class, a validation split lacking four classes, and test
+        hazards drawn almost entirely from one sequence) and evaluates the
+        final model by confusion structure, boundary bands, traversability
+        groups, and zero-shot transfer to RELLIS-3D.
+        \todo{RELLIS-3D group mIoU and drop relative to RUGD test.}
 \end{itemize}
