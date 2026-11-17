@@ -1,0 +1,4 @@
+# Architecture comparison at equal encoder (vs. E2).
+base: base.yaml
+model: {arch: deeplabv3plus, encoder: resnet50}
+loss: {name: ce}

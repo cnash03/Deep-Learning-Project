@@ -1,0 +1,4 @@
+# ImageNet-pretraining ablation. Set loss to the E4-E7 winner. May need more epochs or a higher lr.
+base: best_arch.yaml
+model: {pretrained: false}
+loss: {name: ce}

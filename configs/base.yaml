@@ -1,0 +1,43 @@
+# Shared defaults. Experiment configs set `base: base.yaml` and override only what changes.
+seed: 0
+
+data:
+  name: rugd
+  root: data/rugd        # or set the DATA_ROOT env var
+  img_size: 512          # drop to 384 if GPU memory is tight
+  ignore_void: true      # void pixels are excluded from loss and metrics
+  subset: null           # int -> evenly spaced subset of each split (debugging)
+  val_on_train: false    # E0 only
+
+augment:
+  enabled: true
+  scale_crop: true
+  scale: [0.5, 1.0]
+  hflip: true
+  color_jitter: true     # brightness/contrast/HSV: shade vs. harsh sun
+
+model:
+  arch: unet             # unet | deeplabv3plus
+  encoder: resnet18
+  pretrained: true       # ImageNet weights
+
+loss:
+  name: ce               # ce | weighted_ce | dice | focal | ce_dice
+  class_weights: null    # path to JSON from scripts/compute_class_weights.py
+
+train:
+  epochs: 50
+  batch_size: 8
+  lr: 3.0e-4
+  weight_decay: 1.0e-4
+  warmup_steps: 200
+  amp: true
+  num_workers: 2
+  eval_every: 1
+  resume: true
+  out_dir: runs          # on Colab: /content/drive/MyDrive/reading-the-trail/runs
+
+wandb:
+  enabled: false
+  project: reading-the-trail
+  entity: null
