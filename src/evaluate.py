@@ -69,6 +69,9 @@ def main():
     class_names = meta.get("class_names")
     exclude = [0] if cfg["data"].get("ignore_void", True) else []
 
+    miou_exclude = exclude + [class_names.index(n) for n in cfg.get("eval", {}).get("exclude_from_miou", [])
+                              if class_names and n in class_names]
+
     if args.cross_rellis:
         cfg["data"] = {**cfg["data"], "name": "rellis", "root": args.cross_rellis}
     ds = build_dataset(cfg, args.split, train=False)
@@ -102,7 +105,9 @@ def main():
                "n_images": len(ds), "git_commit_trained": meta.get("git_commit"),
                "group_miou": gcm.miou(), "group_pixel_acc": gcm.pixel_acc()}
     if cm is not None:
-        summary.update({"miou": cm.miou(exclude), "pixel_acc": cm.pixel_acc()})
+        summary.update({"miou": cm.miou(miou_exclude), "miou_incl_excluded": cm.miou(exclude),
+                        "miou_excluded_classes": cfg.get("eval", {}).get("exclude_from_miou", []),
+                        "pixel_acc": cm.pixel_acc()})
         write_csv(out / "per_class_iou.csv", class_names, cm.iou().tolist())
         np.save(out / "confusion.npy", cm.mat.cpu().numpy())
     write_csv(out / "group_iou.csv", GROUPS, gcm.iou().tolist())
