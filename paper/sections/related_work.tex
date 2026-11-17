@@ -1,0 +1,66 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Off-Road Segmentation Datasets and Benchmarks}
+
+\textbf{RUGD.} Wigness \etal{}~\cite{wigness2019rugd} released RUGD, more than
+7,000 frames from video sequences recorded by a small unmanned ground robot
+whose camera sits under 25\,cm above the ground, densely annotated with 24
+classes. They partition the 18 sequences into train, validation, and test
+splits, and deliberately place \emph{creek} (the only sequence with substantial
+rock-bed terrain) and \emph{trail-7} (heavy motion blur) in the test split. Their
+baselines all use a ResNet-50 encoder with PSPNet, UPerNet, or simpler
+decoders, trained at $688\times555$. These reach 35.7--36.7\% mIoU on
+validation but only 31.8--32.2\% on test (24-class mIoU; Tables~II and~III
+of~\cite{wigness2019rugd}). Every baseline scores 0.0 IoU on \emph{bridge}
+(Table~V of~\cite{wigness2019rugd}). We follow their sequence split exactly and
+use their test mIoU as a historical reference point, not as a directly
+comparable number, since our resolution, class averaging, and training budget
+differ (Section~\ref{sec:methods}).
+
+\textbf{RELLIS-3D.} Jiang \etal{}~\cite{jiang2021rellis} recorded RELLIS-3D with
+a larger off-road vehicle on a Texas A\&M University campus. It provides
+6,235 annotated camera images and 13,556 annotated LiDAR scans. On their image
+test split, HRNetV2+OCR and Gated-SCNN reach only 51.55\% and 52.92\% mIoU
+(Table~II of~\cite{jiang2021rellis}). The authors attribute the low scores to
+severe class imbalance and unclear terrain boundaries. RELLIS-3D also contains
+classes that RUGD lacks, such as \emph{mud}, \emph{puddle}, and \emph{rubble},
+which motivates the shared group-level class map we use for the cross-dataset
+test.
+
+\textbf{Off-road methods.} GA-Nav~\cite{guan2022ganav} merges the fine classes
+of both datasets into six navigability groups and adds a group-wise attention
+mechanism to a transformer backbone. Under that grouping, GA-Nav reports
+89.08\% mIoU on RUGD and 74.44\% on RELLIS-3D, compared with 55.88\% and
+62.27\% for its DeepLabv3+ baseline (Table~V of the arXiv version
+of~\cite{guan2022ganav}). Their groups (smooth, rough, bumpy, forbidden,
+obstacle, background) differ from our six traversability groups, so these
+figures show the gain from coarse grouping and are not directly comparable to
+our group mIoU.
+
+\subsection{Architectures and Pretraining}
+
+U-Net~\cite{ronneberger2015unet} pairs a contracting encoder with a symmetric
+expanding decoder and concatenates encoder features into the decoder at every
+scale, which preserves fine spatial detail.
+DeepLabV3+~\cite{chen2018deeplabv3plus} instead relies on atrous spatial
+pyramid pooling (ASPP)~\cite{chen2017deeplabv3}, parallel dilated convolutions
+that capture multi-scale context at reduced resolution, and adds a lightweight
+decoder with a single low-level skip connection to refine boundaries. Both are
+commonly paired with residual encoders~\cite{he2016resnet} pretrained on
+ImageNet~\cite{deng2009imagenet}, which speeds convergence and helps when
+labeled data is scarce. How well that transfer holds for low-viewpoint
+natural terrain is one of the questions we test.
+
+\subsection{Losses for Class Imbalance}
+
+Weighted cross-entropy rescales each pixel's loss by a per-class weight. With
+median-frequency balancing~\cite{eigen2015predicting}, the weight is the
+median class frequency divided by the frequency of the pixel's class. Dice
+loss~\cite{milletari2016vnet} directly optimizes a soft overlap measure that
+is insensitive to how many pixels a class occupies. Focal
+loss~\cite{lin2017focal} multiplies the cross-entropy term by
+$(1-p_t)^\gamma$, which down-weights well-classified examples so that training
+focuses on hard ones. Combining cross-entropy with Dice is a common way to
+keep the stable gradients of the former while adding the class-balancing
+effect of the latter. We compare all four under a fixed architecture.

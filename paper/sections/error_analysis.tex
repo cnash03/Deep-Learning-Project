@@ -1,0 +1,58 @@
+\section{Error Analysis}
+\label{sec:error}
+
+% All analyses use the final model's TEST predictions (confusion.npy and saved
+% predictions); no decision in this section feeds back into model selection.
+
+\subsection{Confusion Structure}
+
+\todo{Describe the row-normalized test confusion matrix (Fig.~\ref{fig:confusion}):
+the dominant off-diagonal mass (expected candidates: grass$\leftrightarrow$bush,
+mulch$\leftrightarrow$dirt, gravel$\leftrightarrow$rock-bed, rock$\rightarrow$rock-bed,
+water$\rightarrow$\,?), and whether errors stay within a traversability group
+(benign) or cross groups (\eg water predicted as ground, which is safety-relevant).}
+
+\begin{figure}[t]
+  \centering
+  \placeholderfig{6.5cm}{Row-normalized test confusion matrix (recall per
+  ground-truth class), classes ordered by traversability group with group
+  boundaries drawn. From results/\textless final\textgreater/test/confusion.npy.}
+  \caption{Normalized confusion matrix of the final model on the RUGD test
+  split. \todo{takeaway}}
+  \label{fig:confusion}
+\end{figure}
+
+\subsection{Hardest Frames and Sequences}
+
+\todo{Per-sequence test mIoU (creek, park-1, trail-7, trail-13): test whether
+the motion-blurred trail-7 and the rock-bed-heavy creek are the hardest
+sequences, as the RUGD authors intended~\cite{wigness2019rugd}. Describe the
+worst frames in Fig.~\ref{fig:gallery}: blur, shade/overexposure, water
+reflections, and unseen bridge structures.}
+
+\begin{figure*}[t]
+  \centering
+  \placeholderfig{5.0cm}{Worst-frame gallery: 4 rows (lowest per-frame mIoU
+  on test, one per failure type) $\times$ 4 columns: image $\mid$ ground
+  truth $\mid$ prediction $\mid$ error map (correct / wrong / void).}
+  \caption{Representative failure cases on the RUGD test split.
+  \todo{one line per row describing the failure mode}}
+  \label{fig:gallery}
+\end{figure*}
+
+\subsection{Boundary Ambiguity}
+
+\todo{mIoU with and without a thin band (\tbd\ px at $384^2$) around label
+boundaries excluded from scoring. A large gap indicates that much of the
+remaining error comes from ambiguous transitions (grass/mulch, bush/tree)
+rather than from misrecognized regions.}
+
+\subsection{Classes the Data Cannot Support}
+
+\emph{Bridge} illustrates a failure that no loss function can fix: with zero
+training pixels, its roughly 4.6\,M test pixels must be assigned to some other
+class.
+\todo{Report what the model predicts on bridge pixels (from the confusion row),
+and its IoU, which is 0 by construction.} Similarly, \emph{bicycle} is absent
+from test, so any bicycle prediction is a pure false positive.
+\todo{count, if nonzero}.

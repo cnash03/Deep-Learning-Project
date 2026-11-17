@@ -1,0 +1,114 @@
+\section{Experiments and Results}
+\label{sec:results}
+
+% Sources for every number in this section:
+%   results/decisions.json                  -- automated selections (E2 vs E3, best loss, top-2)
+%   runs/<run>/history.json                 -- per-epoch train loss / val mIoU (Fig. curves)
+%   results/<run>/{val,test}/summary.json   -- mIoU, pixel acc, group mIoU
+%   results/<run>/{val,test}/per_class_iou.csv, confusion.npy
+% Test numbers only for the final configurations, evaluated once.
+
+\textbf{Validation strategy.} All model and loss selection uses the 733-frame
+validation split (Section~\ref{sec:protocol}), and every number in
+Table~\ref{tab:main} except the test columns comes from validation.
+Because validation lacks four classes (\emph{sand}, \emph{rock-bed},
+\emph{bicycle}, \emph{bridge}), validation mIoU averages over fewer classes
+than test mIoU, and the two are not interchangeable. We therefore report both,
+and we treat the validation-to-test gap as a finding rather than a bug.
+
+\textbf{Sanity check (E0).} \todo{E0 result: final mIoU on the 50-image
+training subset after 100 epochs (threshold 0.70), and the training loss.}
+
+\subsection{Architecture and Encoder}
+\label{sec:res_arch}
+
+\todo{E1 vs.\ E2 (encoder depth) and E2 vs.\ E3 (decoder), with val mIoU
+differences and which architecture the automated rule selected. Note whether
+the difference exceeds the seed standard deviation from E9.}
+
+\begin{table*}[t]
+  \centering
+  \caption{Main results. Val: best-epoch validation mIoU (the selection
+  criterion). Test: evaluated once, final configurations only. mIoU excludes
+  \emph{void} and \emph{bridge} (Section~\ref{sec:metrics}). Group: six-group
+  traversability mIoU. E9 rows give mean $\pm$ std over seeds 0, 1, 2.}
+  \label{tab:main}
+  \footnotesize
+  \begin{tabular}{@{}l l l l c c c c c c c@{}}
+    \toprule
+     & & & & \multicolumn{2}{c}{mIoU (\%)} & Pixel & Group & \multicolumn{3}{c}{Rare-class IoU, test (\%)} \\
+    \cmidrule(lr){5-6}\cmidrule(lr){9-11}
+    ID & Arch. & Enc. & Loss & Val & Test & acc.\ (\%) & mIoU (\%) & water & log & rock \\
+    \midrule
+    E1 & U-Net      & R18 & CE      & \tbd & --   & \tbd & \tbd & --   & --   & --   \\
+    E2 & U-Net      & R50 & CE      & \tbd & --   & \tbd & \tbd & --   & --   & --   \\
+    E3 & DeepLabV3+ & R50 & CE      & \tbd & --   & \tbd & \tbd & --   & --   & --   \\
+    E4 & \tbd       & R50 & wCE     & \tbd & --   & \tbd & \tbd & --   & --   & --   \\
+    E5 & \tbd       & R50 & Dice    & \tbd & --   & \tbd & \tbd & --   & --   & --   \\
+    E6 & \tbd       & R50 & Focal   & \tbd & --   & \tbd & \tbd & --   & --   & --   \\
+    E7 & \tbd       & R50 & CE+Dice & \tbd & --   & \tbd & \tbd & --   & --   & --   \\
+    E8 & \tbd       & R50 (scratch) & \tbd & \tbd & -- & \tbd & \tbd & -- & -- & -- \\
+    \midrule
+    E9-a & \multicolumn{3}{l}{\tbd\ (3 seeds)} & \tbd$\pm$\tbd & \tbd$\pm$\tbd & \tbd & \tbd & \tbd & \tbd & \tbd \\
+    E9-b & \multicolumn{3}{l}{\tbd\ (3 seeds)} & \tbd$\pm$\tbd & \tbd$\pm$\tbd & \tbd & \tbd & \tbd & \tbd & \tbd \\
+    \midrule
+    \multicolumn{4}{@{}l}{RUGD baselines~\cite{wigness2019rugd}$^\dagger$} & 35.7--36.7 & 31.8--32.2 & & & 1.8--5.3 & 40.2--43.1 & 8.9--13.3 \\
+    \bottomrule
+  \end{tabular}\\[2pt]
+  \parbox{\textwidth}{\footnotesize $^\dagger$ResNet-50 PSPNet/UPerNet variants
+  from Tables II, III, and V of~\cite{wigness2019rugd}: $688\times555$ input,
+  80K iterations, mIoU averaged over the 24 RUGD classes as defined there, including \emph{bridge}. They are
+  shown for context only and are not directly comparable.}
+\end{table*}
+
+\subsection{Loss Functions and Rare Classes}
+\label{sec:res_loss}
+
+\todo{E4--E7 vs.\ the CE winner: val mIoU, which loss the rule selected, and
+the per-class effect on water, log, rock, rock-bed, person, and sign
+(Fig.~\ref{fig:perclass}). State whether reweighting trades away IoU on
+frequent classes (tree, grass, mulch) or pixel accuracy.}
+
+\begin{figure}[t]
+  \centering
+  \placeholderfig{5.5cm}{Per-class test IoU, grouped bars: CE vs.\ wCE vs.\
+  Dice vs.\ Focal vs.\ CE+Dice on the selected architecture; classes sorted by
+  training frequency (same order as Fig.~\ref{fig:classfreq}).}
+  \caption{Per-class IoU by loss function. \todo{one-sentence takeaway}}
+  \label{fig:perclass}
+\end{figure}
+
+\subsection{ImageNet Pretraining and Seed Variance}
+\label{sec:res_pretrain}
+
+\todo{E8 vs.\ its pretrained counterpart: absolute mIoU gap under the same
+25-epoch budget, and which classes suffer most. E9: mean $\pm$ std of
+val and test mIoU for the two best configurations. Say whether the
+differences reported in Sections~\ref{sec:res_arch}--\ref{sec:res_loss}
+exceed seed noise.}
+
+\begin{figure}[t]
+  \centering
+  \placeholderfig{4.5cm}{Training curves from runs/*/history.json: training
+  loss (left axis) and validation mIoU (right axis) vs.\ epoch for E1, E2, E3,
+  the best-loss run, and E8. Mark the selected best epoch.}
+  \caption{Training dynamics. \todo{takeaway, e.g., where validation mIoU
+  plateaus and the effect of pretraining on convergence speed}}
+  \label{fig:curves}
+\end{figure}
+
+\subsection{Traversability Groups}
+\label{sec:res_groups}
+
+\todo{Group IoU on test for the final model(s): smooth ground, rough ground,
+vegetation, water, obstacle, sky. Compare group mIoU with fine-class mIoU, and
+note which group gains most from coarsening.}
+
+\subsection{Cross-Dataset Test on RELLIS-3D (Stretch Goal)}
+\label{sec:res_rellis}
+
+\todo{If run: RUGD-trained final model evaluated zero-shot on the RELLIS-3D
+test split through the shared group map (Table~\ref{tab:groups}); report group
+mIoU on RUGD test vs.\ RELLIS-3D test, and the per-group drop. If not run,
+replace this subsection with one sentence in Section~\ref{sec:discussion}
+stating that it was cut and why.}

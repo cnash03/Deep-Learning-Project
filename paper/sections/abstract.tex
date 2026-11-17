@@ -1,0 +1,22 @@
+% Abstract: 100-150 words (Requirements.md). Fill the \tbd numbers once the
+% test-set evaluation is done, then re-count words.
+\begin{abstract}
+Off-road robots must tell drivable dirt and gravel from water, logs, and dense
+vegetation, yet off-road scenes lack the structure that urban driving models
+rely on, and the classes that matter most for safety are among the rarest. We
+study pixel-wise terrain segmentation on the RUGD dataset with two
+encoder--decoder networks, U-Net and DeepLabV3+, each built on an
+ImageNet-pretrained ResNet encoder, and compare four imbalance-aware training
+losses against plain cross-entropy under a fixed sequence-level split and
+validation-only model selection. Our best model,
+\todo{architecture/encoder + loss}, reaches \tbd\% test mIoU (void and the untrainable \emph{bridge}
+class excluded) and \tbd\% mIoU over six traversability groups.
+\todo{One sentence on the main finding: architecture effect, which loss helps
+rare classes such as water, log, and rock, and the effect of ImageNet
+pretraining.} \todo{Optional: RELLIS-3D cross-dataset drop, if run.} Error
+analysis shows \todo{dominant confusion pattern}.
+\end{abstract}
+
+\begin{IEEEkeywords}
+semantic segmentation, off-road navigation, class imbalance, RUGD, U-Net, DeepLabV3+
+\end{IEEEkeywords}

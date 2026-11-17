@@ -1,0 +1,13 @@
+% Standalone build of the architecture diagram for slides/video.
+%   pdflatex architecture_standalone.tex
+%   gs -q -dNOPAUSE -dBATCH -sDEVICE=png16m -r300 -dTextAlphaBits=4 -dGraphicsAlphaBits=4 \
+%      -sOutputFile=architecture.png architecture_standalone.pdf
+\documentclass[border=6pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
+\begin{document}
+\input{architecture}
+\end{document}
