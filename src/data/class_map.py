@@ -80,6 +80,14 @@ def _lut(class_names: list[str], mapping: dict[str, str | None]) -> np.ndarray:
 RUGD_GROUP_LUT = _lut([n for n, _ in RUGD_CLASSES], RUGD_TO_GROUP)
 RELLIS_GROUP_LUT = _lut(RELLIS_CLASSES, RELLIS_TO_GROUP)
 
+# RELLIS classes with no RUGD counterpart: a RUGD-trained model cannot have learned them, so the
+# headline cross-dataset score ignores them (same rule as excluding RUGD `bridge`, which has no
+# training pixels). Scoring mud as rough_ground is reported as a sensitivity check.
+RELLIS_UNSEEN = ["mud"]
+RELLIS_GROUP_LUT_SEEN = RELLIS_GROUP_LUT.copy()
+for _name in RELLIS_UNSEEN:
+    RELLIS_GROUP_LUT_SEEN[RELLIS_CLASSES.index(_name)] = IGNORE_INDEX
+
 
 def to_groups(index_mask, lut: np.ndarray):
     """Map a class-index mask (numpy array or torch tensor) to group indices."""

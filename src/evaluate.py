@@ -33,7 +33,7 @@ from torch.utils.data import DataLoader
 
 from .data import build_dataset
 from . import analysis as A
-from .data.class_map import GROUPS, RELLIS_GROUP_LUT, RUGD_GROUP_LUT, to_groups
+from .data.class_map import GROUPS, RELLIS_GROUP_LUT, RELLIS_GROUP_LUT_SEEN, RELLIS_UNSEEN, RUGD_GROUP_LUT, to_groups
 from .metrics import ConfusionMatrix, predict
 from .models import build_model
 from .utils import get_device, load_config
@@ -88,7 +88,10 @@ def main(argv=None):
                               if class_names and n in class_names]
 
     if args.cross_rellis:
-        cfg["data"] = {**cfg["data"], "name": "rellis", "root": args.cross_rellis}
+        size = cfg["data"]["img_size"]
+        # Match RUGD's train-time squeeze (688x550 -> square = 0.8 horizontal/vertical): 1920x1200 -> 384x480.
+        cfg["data"] = {**cfg["data"], "name": "rellis", "root": args.cross_rellis,
+                       "eval_size": [size, int(round(size * 1.25 / 32)) * 32]}
     ds = build_dataset(cfg, args.split, train=False)
     if num_classes is None:
         num_classes, class_names = ds.num_classes, [c if isinstance(c, str) else c[0] for c in ds.classes]
@@ -102,6 +105,7 @@ def main(argv=None):
                     num_workers=cfg["train"].get("num_workers", 2), pin_memory=device.type == "cuda")
     cm = ConfusionMatrix(num_classes, device=device) if not args.cross_rellis else None
     gcm = ConfusionMatrix(len(GROUPS), device=device)
+    gcm_all = ConfusionMatrix(len(GROUPS), device=device) if args.cross_rellis else None  # unseen classes scored
 
     if args.cross_rellis and (args.per_image or args.boundary_band):
         raise SystemExit("--per-image / --boundary-band are only supported for in-domain evaluation")
@@ -129,7 +133,9 @@ def main(argv=None):
             with torch.autocast(device_type=device.type, dtype=torch.float16, enabled=amp):
                 pred = predict(model(images), exclude)
             if args.cross_rellis:
-                gcm.update(to_groups(pred, RUGD_GROUP_LUT), to_groups(masks, RELLIS_GROUP_LUT))
+                gpred = to_groups(pred, RUGD_GROUP_LUT)
+                gcm.update(gpred, to_groups(masks, RELLIS_GROUP_LUT_SEEN))
+                gcm_all.update(gpred, to_groups(masks, RELLIS_GROUP_LUT))
             else:
                 cm.update(pred, masks)
                 gcm.update(to_groups(pred, RUGD_GROUP_LUT), to_groups(masks, RUGD_GROUP_LUT))
@@ -168,6 +174,10 @@ def main(argv=None):
     summary = {"run": run.name, "split": args.split, "ckpt": args.ckpt, "ckpt_epoch": ck.get("epoch"),
                "n_images": len(ds), "git_commit_trained": meta.get("git_commit"),
                "group_miou": gcm.miou(), "group_pixel_acc": gcm.pixel_acc()}
+    if gcm_all is not None:
+        summary.update({"eval_size": cfg["data"]["eval_size"], "rellis_unseen_ignored": RELLIS_UNSEEN,
+                        "group_miou_unseen_scored": gcm_all.miou(),
+                        "group_iou_unseen_scored": dict(zip(GROUPS, gcm_all.iou().tolist()))})
     if cm is not None:
         summary.update({"miou": cm.miou(miou_exclude), "miou_incl_excluded": cm.miou(exclude),
                         "miou_excluded_classes": cfg.get("eval", {}).get("exclude_from_miou", []),
