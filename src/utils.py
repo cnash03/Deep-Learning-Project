@@ -60,6 +60,8 @@ def git_commit() -> str:
 
 
 def get_device() -> torch.device:
+    if os.environ.get("DEVICE"):  # e.g. DEVICE=cpu to keep tests off a busy GPU
+        return torch.device(os.environ["DEVICE"])
     if torch.cuda.is_available():
         return torch.device("cuda")
     if torch.backends.mps.is_available():

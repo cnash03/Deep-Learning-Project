@@ -70,9 +70,11 @@ def main():
 
     g = torch.Generator().manual_seed(cfg.get("seed", 0))
     train_dl = DataLoader(train_ds, batch_size=tc["batch_size"], shuffle=True, drop_last=True,
-                          num_workers=tc.get("num_workers", 2), pin_memory=device.type == "cuda", generator=g)
+                          num_workers=tc.get("num_workers", 2), pin_memory=device.type == "cuda", generator=g,
+                          persistent_workers=tc.get("num_workers", 2) > 0)
     val_dl = DataLoader(val_ds, batch_size=tc["batch_size"], shuffle=False,
-                        num_workers=tc.get("num_workers", 2), pin_memory=device.type == "cuda")
+                        num_workers=tc.get("num_workers", 2), pin_memory=device.type == "cuda",
+                        persistent_workers=tc.get("num_workers", 2) > 0)
 
     model = build_model(cfg, num_classes).to(device)
     criterion = build_loss(cfg, num_classes, device)
