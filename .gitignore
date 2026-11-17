@@ -1,0 +1,15 @@
+# Data and training outputs (checkpoints live on Drive / W&B, not git)
+/data/
+/runs/
+/wandb/
+*.pt
+*.pth
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store

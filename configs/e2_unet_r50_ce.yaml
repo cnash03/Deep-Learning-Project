@@ -1,0 +1,4 @@
+# Effect of the encoder alone (vs. E1).
+base: base.yaml
+model: {arch: unet, encoder: resnet50}
+loss: {name: ce}

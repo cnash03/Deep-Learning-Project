@@ -1,0 +1,5 @@
+# Sanity check: overfit 50 training images. Loss should approach 0 and mIoU should approach 1.
+base: base.yaml
+data: {img_size: 384, subset: 50, val_on_train: true}
+augment: {enabled: false}
+train: {epochs: 100, batch_size: 4, warmup_steps: 0, eval_every: 10}

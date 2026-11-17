@@ -1,0 +1,16 @@
+# Pinned for reproducibility (tested with Python 3.12).
+# On Colab, torch/torchvision come preinstalled: notebooks/colab_runner.ipynb
+# installs everything else and keeps Colab's torch.
+torch==2.15.0
+torchvision==0.29.2
+segmentation_models_pytorch==0.6.0
+timm==1.0.31
+albumentations==2.0.8
+opencv-python-headless==5.0.0.93
+numpy==2.5.5
+pillow==13.0.0
+PyYAML==6.0.3
+wandb==0.31.0
+matplotlib==3.11.2
+pandas==3.1.1
+pytest==9.2.0

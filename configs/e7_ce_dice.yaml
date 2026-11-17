@@ -1,0 +1,2 @@
+base: best_arch.yaml
+loss: {name: ce_dice, ce_weight: 1.0, dice_weight: 1.0}

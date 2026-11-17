@@ -1,0 +1,4 @@
+# Baseline.
+base: base.yaml
+model: {arch: unet, encoder: resnet18}
+loss: {name: ce}
