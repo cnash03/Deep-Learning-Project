@@ -104,7 +104,7 @@ def main():
         start_epoch, best_miou, history = ck["epoch"] + 1, ck["best_miou"], ck["history"]
         print(f"Resumed from {last_ckpt} at epoch {start_epoch}")
 
-    cfg["_meta"] = {"git_commit": git_commit(), "torch": torch.__version__, "device": str(device),
+    cfg["_meta"] = {"git_commit": git_commit(), "torch": str(torch.__version__), "device": str(device),
                     "gpu": torch.cuda.get_device_name(0) if device.type == "cuda" else None, "num_classes": num_classes, "class_names": class_names,
                     "n_train": len(train_ds), "n_val": len(val_ds), "val_split": val_split}
     (out_dir / "config.yaml").write_text(yaml.safe_dump(cfg, sort_keys=False))
