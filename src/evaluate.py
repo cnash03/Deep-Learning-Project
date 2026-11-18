@@ -180,6 +180,7 @@ def main(argv=None):
                         "group_iou_unseen_scored": dict(zip(GROUPS, gcm_all.iou().tolist()))})
     if cm is not None:
         summary.update({"miou": cm.miou(miou_exclude), "miou_incl_excluded": cm.miou(exclude),
+                        "miou_gt_present": cm.miou_gt_present(miou_exclude),
                         "miou_excluded_classes": cfg.get("eval", {}).get("exclude_from_miou", []),
                         "pixel_acc": cm.pixel_acc()})
         write_csv(out / "per_class_iou.csv", class_names, cm.iou().tolist())

@@ -46,6 +46,14 @@ class ConfusionMatrix:
             iou = iou[mask]
         return float(torch.nanmean(iou))
 
+    def miou_gt_present(self, exclude: list[int] | None = None) -> float:
+        """mIoU over classes that occur in the ground truth only (false positives on absent classes ignored)."""
+        iou = self.iou()
+        present = self.mat.sum(1) > 0
+        if exclude:
+            present[exclude] = False
+        return float(torch.nanmean(iou[present])) if present.any() else float("nan")
+
     def pixel_acc(self) -> float:
         total = self.mat.sum()
         return float(self.mat.diag().sum().cpu() / total.cpu()) if total > 0 else float("nan")

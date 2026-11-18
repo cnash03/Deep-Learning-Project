@@ -31,3 +31,12 @@ def test_predict_excludes_class():
     logits[:, 0] = 10.0
     logits[:, 2] = 1.0
     assert (predict(logits, exclude=[0]) == 2).all()
+
+
+def test_miou_gt_present_ignores_absent_false_positives():
+    target = torch.tensor([0, 0, 1, 1])
+    pred = torch.tensor([0, 0, 1, 2])  # class 2 absent from GT, predicted once
+    cm = ConfusionMatrix(3)
+    cm.update(pred, target)
+    assert math.isclose(cm.miou(), (1 + 0.5 + 0) / 3)
+    assert math.isclose(cm.miou_gt_present(), (1 + 0.5) / 2)
