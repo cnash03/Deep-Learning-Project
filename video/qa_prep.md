@@ -1,6 +1,6 @@
 # Q&A prep for the Peer Showcase
 
-Short answers to likely classmate questions. Each answer names the teammate best placed to give it. Every number below comes from `results/eda/eda_summary.md` or the paper's Methods section. Items marked **[TBD]** depend on the training results. Don't post an answer that still contains a TBD.
+Short answers to likely classmate questions. Each answer names the teammate best placed to give it. Every number below comes from `results/eda/eda_summary.md` or the paper's Methods section. Result numbers come from `results/` and the paper's Experiments section.
 
 ---
 
@@ -11,13 +11,13 @@ Our question was a controlled one: decoder, encoder depth, loss, and pretraining
 Compute. In our benchmark, a 512² step was about 1.9× slower than a 384² step, and the full matrix is about 14 runs. We kept 384² and 25 epochs for *every* run, so all comparisons stay fair, and we disclose this as a deviation from the proposal. The cost is lost detail on thin structures such as poles, signs and log edges. Higher resolution, or sliding-window inference, is the first next step.
 
 **3. Why leave *bridge* out of mIoU? Isn't that cherry-picking?** *(Xander)*
-*Bridge* has 0 training pixels and about 4.6 million test pixels, all from the *creek* sequence. No model trained on the official split can predict it. Its IoU is 0 by construction for every method, including all the published RUGD baselines. Leaving it in lowers every model's mIoU by the same amount and tells you nothing about the methods. We still report bridge's per-class IoU, and the evaluation code also outputs mIoU with bridge included: [TBD: value]. The rule was set in the config before we saw any results.
+*Bridge* has 0 training pixels and about 4.6 million test pixels, all from the *creek* sequence. No model trained on the official split can predict it. Its IoU is 0 by construction for every method, including all the published RUGD baselines. Leaving it in lowers every model's mIoU by the same amount and tells you nothing about the methods. We still report bridge's per-class IoU, and the evaluation code also outputs mIoU with bridge included: 36.0% test for the final model, against 37.7% without. The rule was set in the config before we saw any results.
 
 **4. Why do you expect validation to overstate test?** *(Xander)*
-The splits have different class distributions. Safety classes are 1.1% of training pixels, 1.2% of validation and 10.3% of test. Rock-bed is 114× more common in test than in training, and 98% of it comes from one test sequence (*creek*). Validation also has no sand, rock-bed, bicycle or bridge pixels at all. The total-variation distance between class distributions is 0.11 for train–val but 0.25 for val–test. We measured a validation-to-test gap of [TBD] mIoU points.
+The splits have different class distributions. Safety classes are 1.1% of training pixels, 1.2% of validation and 10.3% of test. Rock-bed is 114× more common in test than in training, and 98% of it comes from one test sequence (*creek*). Validation also has no sand, rock-bed, bicycle or bridge pixels at all. The total-variation distance between class distributions is 0.11 for train–val but 0.25 for val–test. We measured a validation-to-test gap of 7.5 mIoU points for the final model. Almost all of it comes from the creek sequence: it causes 80% of test errors, and without it test mIoU is 49%, the same as validation.
 
 **5. Would this work on a full-size truck?** *(Xander)*
-Not without validation on truck data. RUGD's camera sits under 25 cm off the ground, so a truck's camera would see the same terrain from a much higher, steeper angle. RELLIS-3D comes from a larger vehicle, which makes our zero-shot test a partial proxy: group mIoU went from [TBD] to [TBD]. Changes in viewpoint, geography and season would all need their own data. And as a research model, it isn't meant to drive anything.
+Not without validation on truck data. RUGD's camera sits under 25 cm off the ground, so a truck's camera would see the same terrain from a much higher, steeper angle. RELLIS-3D comes from a larger vehicle, which makes our zero-shot test a partial proxy: group mIoU went from 60.0% on RUGD test to 43.4%. Changes in viewpoint, geography and season would all need their own data. And as a research model, it isn't meant to drive anything.
 
 **6. How would you improve the rare classes further?** *(Callen)*
 Options we'd try, roughly in this order:
@@ -27,7 +27,7 @@ Options we'd try, roughly in this order:
 - Temporal consistency across neighboring video frames.
 - More labeled hazard data. Water and rock-bed are concentrated in only a few sequences, which no loss function can fully fix.
 
-[TBD: mention which of our losses helped most.]
+Of the losses we tried, adding a Dice term helped most: about 3 points on validation, mostly on water, log and mid-frequency objects, with no cost to common classes. Median-frequency weighted cross-entropy made almost every class worse. On test, CE+Dice and plain CE tie (37.7% vs 37.0%).
 
 **7. Why not fine-tune on RELLIS-3D?** *(Xander)*
 The stretch goal was to measure how far a RUGD model transfers *as is*, and fine-tuning would answer a different question. Fine-tuning on a small labeled RELLIS-3D subset is on our future-work list, because it shows how much target data closes the gap. Note also that RELLIS-3D is licensed CC BY-NC-SA, so anything trained on it is for non-commercial use only.
@@ -44,7 +44,7 @@ We report per-class and per-sequence results so these gaps stay visible.
 A script picked every architecture, loss and seed run from validation mIoU alone, and logged each decision to `results/decisions.json`. The evaluation code refuses to touch the test split without an explicit `--confirm-test` flag. We evaluated test once per final configuration, after selection was finished. We split by video sequence, so near-duplicate consecutive frames never appear in both training and test.
 
 **10. Are your differences bigger than run-to-run noise?** *(Callen)*
-We reran the top two configurations with three seeds each. The seed standard deviation is [TBD] mIoU points, and [TBD: which comparisons exceed it]. Three seeds give only a rough bound, which we state as a limitation.
+We planned three seeds for the top two configurations, but the free GPU quota ran out, so only the final configuration got a second seed. The two seeds differ by about 1 point (0.8 on classes present in validation). Pretraining (about 6 points), Dice terms (about 3) and weighted CE (about -7) clearly exceed that. The deeper encoder (under 1 point) and focal vs. CE do not. Two seeds give only a rough bound, which we state as a limitation.
 
 ---
 

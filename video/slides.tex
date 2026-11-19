@@ -6,7 +6,7 @@
 %   * Result figures/tables are pulled from ../results automatically once they exist
 %     (scripts/analyze.py and scripts/gallery.py); until then a grey placeholder box is shown.
 %   * Set the run/split used for the confusion matrix and the gallery here:
-\edef\cmrun{\detokenize{e3_dlv3p_r50_ce}}  % final config chosen on val (see results/decisions.json)
+\edef\cmrun{\detokenize{e7_ce_dice_s1}}  % final config (E7 = CE+Dice, chosen on val); seed-1 replicate, see paper Sec. III
 \edef\cmsplit{\detokenize{test}}
 \providecommand{\resultsdir}{../results}
 
@@ -179,13 +179,13 @@ E7 & CE + Dice & pixel accuracy plus per-class overlap \\
 \toprule
 ID & Change & Question \\
 \midrule
-E0 & overfit 50 images & does the pipeline work? \\
+E0 & memorize 10 images & does the pipeline work? \\
 E1 & U-Net / R18, CE & baseline \\
 E2 & U-Net / R50 & deeper encoder \\
 E3 & DeepLabV3+ / R50 & decoder \\
 E4--E7 & best arch + loss & imbalance \\
 E8 & no ImageNet init & value of pretraining \\
-E9 & top 2 $\times$ 3 seeds & noise level \\
+E9 & E7, 2nd seed & noise level \\
 \bottomrule
 \end{tabular}
 \column{0.43\textwidth}
@@ -206,49 +206,54 @@ E9 & top 2 $\times$ 3 seeds & noise level \\
 \column{0.5\textwidth}
 \small
 \begin{itemize}
-  \item Best config: \tbd\ (chosen on val)
-  \item Test mIoU: \tbd\% \quad Val mIoU: \tbd\%
+  \item Best: \textbf{DeepLabV3+ / R50, CE + Dice}
+  \item Test mIoU: \textbf{37.7\%} \quad Val: 44.2--45.2\%
 \end{itemize}
 \column{0.46\textwidth}
 \small
 \begin{itemize}
-  \item Group (6-class) mIoU: \tbd\%
-  \item Seed std: $\pm$\tbd \quad No pretraining: $-$\tbd\ pts
+  \item Group (6-class) mIoU: \textbf{60.0\%}
+  \item Seeds differ by $\sim$1 pt \quad No pretraining: $-$5.5 pts (test)
 \end{itemize}
 \end{columns}
 \end{frame}
 
 % =================================================================== 10
 \begin{frame}{Do the losses help the rare classes?}
-\begin{columns}[c]
-\column{0.64\textwidth}
 \centering
-\resultfig[width=\linewidth,height=0.78\textheight,keepaspectratio]{per_class_iou_losses.pdf}{0.70\textheight}{Per-class IoU, CE vs.\ E4--E7, rare/safety classes shaded}
-\column{0.34\textwidth}
-\begin{itemize}\setlength\itemsep{6pt}
-  \item \cls{water}: \tbd\ $\to$ \tbd\ IoU
-  \item \cls{log}: \tbd\ $\to$ \tbd
-  \item \cls{rock}: \tbd\ $\to$ \tbd
-  \item Cost on common classes: \tbd
+\resultfig[width=\linewidth,height=0.44\textheight,keepaspectratio]{per_class_iou_losses.pdf}{0.40\textheight}{Per-class IoU, CE vs.\ E4--E7, rare/safety classes shaded}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\small
+\begin{itemize}\setlength\itemsep{1pt}
+  \item CE $\to$ CE + Dice (val IoU): \cls{water} 50$\to$54, \cls{log} 30$\to$36, \cls{container} 6$\to$37
+  \item Common classes unchanged
 \end{itemize}
-\takeaway{\normalsize \tbd: one-line finding}
+\column{0.48\textwidth}
+\small
+\begin{itemize}\setlength\itemsep{1pt}
+  \item Weighted CE: \alert{worse almost everywhere} ($-$9.6 mIoU)
+  \item Focal $\approx$ CE
+\end{itemize}
 \end{columns}
+\takeaway{\normalsize Dice terms add $\sim$3 pts on val; on test, CE+Dice and CE tie.}
 \end{frame}
 
 % =================================================================== 11
 \begin{frame}{Error analysis: where does the model fail?}
 \begin{columns}[c]
-\column{0.40\textwidth}
+\column{0.60\textwidth}
 \centering
-\resultfig[width=\linewidth,height=0.72\textheight,keepaspectratio]{confusion_\cmrun_\cmsplit.pdf}{0.62\textheight}{Row-normalized confusion matrix}
-\column{0.58\textwidth}
-\centering
-\resultfig[width=\linewidth,height=0.50\textheight,keepaspectratio]{gallery_\cmrun_\cmsplit.pdf}{0.42\textheight}{Best / median / worst frames: image, label, prediction, error}
+\resultfig[width=\linewidth,height=0.84\textheight,keepaspectratio]{compare_e3_dlv3p_r50_ce_vs_e7_ce_dice_s1_\cmsplit.pdf}{0.80\textheight}{CE vs.\ CE+Dice on water/log/rock frames}
+\column{0.38\textwidth}
 \small
-\begin{itemize}
-  \item Top confusion: \tbd\ $\to$ \tbd
-  \item \tbd\% of errors lie within 3\,px of a label boundary
+\begin{itemize}\setlength\itemsep{6pt}
+  \item One scene, \textbf{creek}, causes \alert{80\% of test errors}
+  \item Clear, shallow water $\to$ \cls{mulch}:\\ \alert{55\% of water called drivable ground}
+  \item Logs are found well (48\% IoU)
+  \item Without creek: test mIoU 49\%, same as val
 \end{itemize}
+\takeaway{\normalsize The val$\to$test gap is one unseen scene.}
 \end{columns}
 \end{frame}
 
@@ -262,23 +267,23 @@ E9 & top 2 $\times$ 3 seeds & noise level \\
 \toprule
 Group IoU (\%) & RUGD test & RELLIS-3D \\
 \midrule
-Smooth ground & \tbd & \tbd \\
-Rough ground  & \tbd & \tbd \\
-Vegetation    & \tbd & \tbd \\
-Water         & \tbd & \tbd \\
-Obstacle      & \tbd & \tbd \\
-Sky           & \tbd & \tbd \\
+Smooth ground & 54 & 25 \\
+Rough ground  & 57 & 0 \\
+Vegetation    & 77 & 85 \\
+Water         & 6 & 2 \\
+Obstacle      & 84 & 53 \\
+Sky           & 82 & 95 \\
 \midrule
-\textbf{Group mIoU} & \tbd & \tbd \\
+\textbf{Group mIoU} & \textbf{60.0} & \textbf{43.4} \\
 \bottomrule
 \end{tabular}
 \column{0.47\textwidth}
 \begin{itemize}\setlength\itemsep{5pt}
   \item New vehicle, camera height, and place (Texas).
   \item No retraining. Both label sets mapped to 6 shared groups.
-  \item \cls{mud} has no RUGD class, so it is ignored (scored as rough ground: \tbd).
+  \item \cls{mud} has no RUGD class, so it is ignored (scored as rough ground: 43.6).
 \end{itemize}
-\takeaway{\normalsize Drop: \tbd\ points of group mIoU.}
+\takeaway{\normalsize Drop: 16.6 points. Sky and vegetation transfer; ground and water do not.}
 \end{columns}
 \end{frame}
 
@@ -294,7 +299,7 @@ Sky           & \tbd & \tbd \\
   \item Val lacks 4 classes $\to$ val and test reported separately
   \item Frame leakage $\to$ sequence split, verified by script
   \item Coarse polygon labels $\to$ boundary-band analysis
-  \item Compute: 512$^2$/50 ep $\to$ 384$^2$/25 ep for \emph{all} runs, disclosed
+  \item Compute: 384$^2$/25 ep for all runs; GPU quota cut 3 seed runs, disclosed
 \end{itemize}
 \column{0.48\textwidth}
 \textbf{\color{trail}Bias, safety, and use}
@@ -303,7 +308,7 @@ Sky           & \tbd & \tbd \\
   \item Worst error = missed hazard. \alert{Not a safety system.}
   \item Dual use: RUGD comes from the Army Research Laboratory
   \item RELLIS-3D: non-commercial license (CC BY-NC-SA)
-  \item Demo photos: EXIF/GPS stripped, no people or plates
+  \item Risk realized: creek water labeled drivable
 \end{itemize}
 \end{columns}
 \end{frame}
@@ -317,7 +322,7 @@ Sky           & \tbd & \tbd \\
   \item Look at the data before training. Our EDA found the \cls{bridge} and validation gaps.
   \item mIoU hides the classes that matter. Report per-class IoU.
   \item Automating model selection keeps us away from the test set.
-  \item \tbd: result-driven lesson
+  \item A validation set missing classes and scenes misleads: check metrics on GT-present classes and per scene.
 \end{itemize}
 \column{0.46\textwidth}
 \textbf{\color{trail}Next steps}

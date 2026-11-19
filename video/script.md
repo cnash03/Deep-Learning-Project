@@ -3,10 +3,10 @@
 Target length **7:00** (hard limits 6:00 to 8:00). The timings assume about 140 words per minute. Slide numbers match `video/slides.pdf`.
 
 - **Callen** (model and documentation lead) presents the motivation, the architecture, the losses and protocol, the main results, and the lessons learned.
-- **Xander** (data and evaluation lead) presents the data, the imbalance, the distribution shift, the error analysis, RELLIS-3D, and the data-integrity half of the ethics slide.
+- **Xander** (data and evaluation lead) presents the data, the imbalance, the distribution shift, the per-class loss comparison, the error analysis, RELLIS-3D, and the data-integrity half of the ethics slide.
 - Both speak on the title and closing slides.
 
-Anything in **[TBD: …]** must be filled in from `results/` before recording. The slides mark the same spots with a red **TBD**.
+Every number below comes from `results/` and matches the slides and the paper.
 
 | # | Slide | Speaker | Time | Running total |
 |---|---|---|---|---|
@@ -19,14 +19,14 @@ Anything in **[TBD: …]** must be filled in from `results/` before recording. T
 | 7 | Five losses | Callen | 0:20 | 3:05 |
 | 8 | Experimental protocol | Callen | 0:30 | 3:35 |
 | 9 | Results | Callen | 0:30 | 4:05 |
-| 10 | Losses and rare classes | Callen | 0:30 | 4:35 |
+| 10 | Losses and rare classes | Xander | 0:30 | 4:35 |
 | 11 | Error analysis | Xander | 0:40 | 5:15 |
 | 12 | RELLIS-3D | Xander | 0:25 | 5:40 |
 | 13 | Risk and ethics | Xander, then Callen | 0:50 | 6:30 |
 | 14 | Lessons and next steps | Callen | 0:25 | 6:55 |
 | 15 | Thank you | Xander, then Callen | 0:10 | 7:05 |
 
-The script has about 910 words, which is about 6:30 of speech at 140 words per minute. Pauses and slide changes bring it to about 7:00. Callen speaks for about 3:40 and Xander for about 3:00, plus the shared intro and close. If a take runs long, shorten the sentence after each number; don't speed up.
+The script has about 910 words, which is about 6:30 of speech at 140 words per minute. Pauses and slide changes bring it to about 7:00. Callen speaks for about 3:10 and Xander for about 3:30, plus the shared intro and close. If a take runs long, shorten the sentence after each number; don't speed up.
 
 ---
 
@@ -62,33 +62,33 @@ To handle the imbalance, we compare plain cross-entropy with four alternatives. 
 
 ## 8. Experimental protocol (0:30) — Callen
 
-Each experiment changes one thing: the encoder, the decoder, the loss, or ImageNet pretraining. The two best configurations are then rerun with three seeds to measure noise. A script picks every winner from validation scores alone and logs the decision. The test set is used once, at the end. Every run uses 384 pixels and 25 epochs on a Colab GPU.
+Each experiment changes one thing: the encoder, the decoder, the loss, or ImageNet pretraining. The best configuration is rerun with a second seed to measure noise. A script picks every winner from validation scores alone and logs the decision. The test set is used once, at the end. Every run uses 384 pixels and 25 epochs on a Colab GPU.
 
 ## 9. Results (0:30) — Callen
 
-Here is every configuration. The selection script picked **[TBD: best config]**, which reaches **[TBD]** percent mIoU on validation and **[TBD]** on the held-out test set. That gap matches the shift Xander described. On the six traversability groups (ground, vegetation, water, obstacles and so on), it reaches **[TBD]** percent. Seeds vary by about **[TBD]** points. Removing ImageNet pretraining costs **[TBD]** points.
+Here is every configuration. The selection script picked DeepLabV3-plus with a ResNet-50 encoder, trained with cross-entropy plus Dice. It reaches about 45 percent mIoU on validation and 37.7 on the held-out test set, well above the original RUGD baselines of about 32. On the six traversability groups (ground, vegetation, water, obstacles and so on), it reaches 60 percent. Two seeds differ by about one point. Removing ImageNet pretraining costs five and a half points on test, the biggest single factor.
 
-## 10. Losses and rare classes (0:30) — Callen
+## 10. Losses and rare classes (0:30) — Xander
 
-Now the question we cared about most: do these losses help the rare classes? The shaded region holds the safety classes. Water goes from **[TBD]** to **[TBD]** IoU, log from **[TBD]** to **[TBD]**, and rock from **[TBD]** to **[TBD]**. On the common classes, the cost is **[TBD]**. In short, **[TBD: one-sentence finding, only what the data supports]**.
+Now the question we cared about most: do these losses help the rare classes? The shaded region holds the safety classes. On validation, adding Dice to cross-entropy raises water from 50 to 54 IoU, log from 30 to 36, and generic objects from 6 to 37, and the common classes don't change. Weighted cross-entropy, the textbook fix, made almost every class worse. In short, Dice helps rare classes by about three points on validation, but on the test set it only ties plain cross-entropy.
 
 ## 11. Error analysis (0:40) — Xander
 
-So where does the model fail? On the left is the test confusion matrix, with classes grouped by traversability. Most of the confusion is **[TBD: e.g. grass versus bush]**, which stays inside a group and is fairly harmless. The dangerous errors cross groups, like **[TBD: e.g. water predicted as ground]**. On the right are the best, median and worst frames, with errors in red. The worst ones show **[TBD: failure mode]**. Labels are coarse polygons, and **[TBD]** percent of all errors fall within three pixels of a boundary.
+So where does the model fail? One test scene, a creek, causes 80 percent of all test errors. Look at the top two rows: the stream is shallow and clear, so the camera sees brown stones through it, and both models call it mulch. That means 55 percent of water pixels are labeled as drivable ground, exactly the hazard we worried about. Logs, in the bottom rows, are found well. Leave out the creek, and test mIoU is 49 percent, the same as validation. So the drop from validation to test is one unseen scene, not a general failure.
 
 ## 12. Zero-shot RELLIS-3D (0:25) — Xander
 
-We then ran the RUGD model, with no retraining, on RELLIS-3D. It was recorded in Texas by a different, taller vehicle. With both label sets mapped to six shared groups, group mIoU falls from **[TBD]** to **[TBD]**, and **[TBD: group]** drops the most. RELLIS's *mud* class has no RUGD counterpart, so we ignore it.
+We then ran the RUGD model, with no retraining, on RELLIS-3D. It was recorded in Texas by a different, taller vehicle. With both label sets mapped to six shared groups, group mIoU falls from 60 to 43 percent. Sky and vegetation transfer fine. Ground and water drop the most, the same safety-relevant groups again. RELLIS's *mud* class has no RUGD counterpart, so we ignore it.
 
 ## 13. Updated risk and ethics (0:50) — Xander, then Callen
 
-**Xander:** A few data-integrity issues came up. *Bridge* can't be learned, so we leave it out of the headline score but still report it. We report validation and test separately, check the sequence split with a script, and measure the effect of coarse labels. Our compute budget meant 384 pixels and 25 epochs instead of 512 and 50, applied to every run and disclosed.
+**Xander:** A few data-integrity issues came up. *Bridge* can't be learned, so we leave it out of the headline score but still report it. We report validation and test separately, check the sequence split with a script, and measure the effect of coarse labels. Our compute budget meant 384 pixels and 25 epochs instead of 512 and 50, applied to every run, and the free GPU ran out before three of our seed reruns. All of that is disclosed.
 
-**Callen:** On bias and safety: this data covers one region, seen by one robot with a camera under twenty-five centimeters off the ground. A missed hazard is the worst error, so this is a research model, not a safety system. We also flag dual use, since RUGD came from an Army lab, and RELLIS is licensed for non-commercial use only.
+**Callen:** On bias and safety: this data covers one region, seen by one robot with a camera under twenty-five centimeters off the ground. A missed hazard is the worst error, and our model did miss one: it called creek water drivable. So this is a research model, not a safety system. We also flag dual use, since RUGD came from an Army lab, and RELLIS is licensed for non-commercial use only.
 
 ## 14. Lessons and next steps (0:25) — Callen
 
-What we learned: look at the data first, because our exploration caught the bridge and validation problems before any training. Average scores hide the classes that matter. Automated selection keeps you honest about the test set. **[TBD: one lesson from the results.]** Next steps are full resolution, a validation split that covers every class, video consistency, and calibrated uncertainty.
+What we learned: look at the data first, because our exploration caught the bridge and validation problems before any training. Average scores hide the classes that matter. Automated selection keeps you honest about the test set. And a validation set that is missing classes and scenes can mislead you, so check each class and each scene. Next steps are full resolution, a validation split that covers every class, video consistency, and calibrated uncertainty.
 
 ## 15. Thank you (0:10)
 
@@ -108,7 +108,7 @@ What we learned: look at the data first, because our exploration caught the brid
 **Takes**
 - Record **one take per section**, for example slides 1–2, 3–5, 6–10, 11–13 and 14–15. Leave a 2-second pause at the start and end of each take for clean cuts.
 - Read the script once aloud with a timer before recording. If a section runs more than 10% over its budget, trim words rather than speeding up.
-- Fill every **[TBD]** first, and check each spoken number against the slide.
+- Check each spoken number against the slide.
 
 **Stitching**
 - **iMovie** or **QuickTime** (*Edit → Add Clip to End*), **Clipchamp**, or **DaVinci Resolve** all work. Put the clips in slide order and trim the pauses.
@@ -116,5 +116,5 @@ What we learned: look at the data first, because our exploration caught the brid
 
 **Final check**
 - Total length must be between **6:00 and 8:00**. Aim for 6:45 to 7:15 so there's margin.
-- Watch the whole thing once. Both voices and both faces should appear, every figure should be readable at 1080p, and no TBD should be visible.
+- Watch the whole thing once. Both voices and both faces should appear, and every figure should be readable at 1080p.
 - Export at 1080p MP4 (H.264) and upload. Then add the link to `showcase_post.md`.
