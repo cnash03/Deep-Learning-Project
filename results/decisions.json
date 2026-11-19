@@ -1,0 +1,45 @@
+{
+  "e0_sanity": {
+    "pixel_acc": 0.9795788526535034,
+    "miou": 0.6851909553509624,
+    "train_loss": 0.12332967817783355
+  },
+  "best_arch": {
+    "run": "e3_dlv3p_r50_ce",
+    "model": {
+      "arch": "deeplabv3plus",
+      "encoder": "resnet50",
+      "pretrained": true
+    },
+    "val": {
+      "e2_unet_r50_ce": 0.37701215997246335,
+      "e3_dlv3p_r50_ce": 0.43323999287841686
+    }
+  },
+  "best_loss": {
+    "run": "e7_ce_dice",
+    "loss": {
+      "name": "ce_dice",
+      "class_weights": null,
+      "ce_weight": 1.0,
+      "dice_weight": 1.0
+    },
+    "val": {
+      "e3_dlv3p_r50_ce": 0.43323999287841686,
+      "e4_weighted_ce": 0.3373731210009282,
+      "e5_dice": 0.42345231537281897,
+      "e6_focal": 0.41097933971101674,
+      "e7_ce_dice": 0.4423654916288886
+    }
+  },
+  "seed_runs": {
+    "configs": [
+      "e7_ce_dice",
+      "e3_dlv3p_r50_ce"
+    ],
+    "seeds": [
+      1,
+      2
+    ]
+  }
+}

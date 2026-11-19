@@ -1,22 +1,15 @@
-% Abstract: 100-150 words (Requirements.md). Fill the \tbd numbers once the
-% test-set evaluation is done, then re-count words.
+% Abstract: 100-150 words (Requirements.md).
 \begin{abstract}
-Off-road robots must tell drivable dirt and gravel from water, logs, and dense
-vegetation, yet off-road scenes lack the structure that urban driving models
-rely on, and the classes that matter most for safety are among the rarest. We
-study pixel-wise terrain segmentation on the RUGD dataset with two
-encoder--decoder networks, U-Net and DeepLabV3+, each built on an
-ImageNet-pretrained ResNet encoder, and compare four imbalance-aware training
-losses against plain cross-entropy under a fixed sequence-level split and
-validation-only model selection. Our best model,
-\todo{architecture/encoder + loss}, reaches \tbd\% test mIoU (void and the untrainable \emph{bridge}
-class excluded) and \tbd\% mIoU over six traversability groups.
-\todo{One sentence on the main finding: architecture effect, which loss helps
-rare classes such as water, log, and rock, and the effect of ImageNet
-pretraining.} \todo{Zero-shot RELLIS-3D group mIoU and drop, if run.} Error
-analysis shows \todo{dominant confusion pattern}.
+Off-road robots must tell drivable ground from water, logs, and dense
+vegetation, yet the classes that matter most for safety are among the rarest.
+On the RUGD dataset we compare U-Net and DeepLabV3+ with ImageNet-pretrained
+ResNet encoders and five training losses, selecting models on validation
+only. DeepLabV3+/ResNet-50 with cross-entropy plus Dice reaches 37.7\% test
+mIoU and 60.0\% over six traversability groups. Pretraining adds about six
+points and Dice terms about three, while a deeper encoder and focal loss stay
+within seed noise, and median-frequency weighting hurts. Part of the apparent
+gains came from scoring classes absent from validation. One unseen creek
+scene accounts for 80\% of test errors: its shallow water is labeled
+drivable ground. Zero-shot on RELLIS-3D, group mIoU falls to 43.4\%, with
+ground and water transferring worst.
 \end{abstract}
-
-\begin{IEEEkeywords}
-semantic segmentation, off-road navigation, class imbalance, RUGD, U-Net, DeepLabV3+
-\end{IEEEkeywords}

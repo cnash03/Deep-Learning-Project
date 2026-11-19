@@ -1,0 +1,7 @@
+class,iou
+smooth_ground,0.5499
+rough_ground,0.5792
+vegetation,0.7361
+water,0.0193
+obstacle,0.8146
+sky,0.7942

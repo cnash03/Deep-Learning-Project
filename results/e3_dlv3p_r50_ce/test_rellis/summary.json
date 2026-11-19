@@ -1,0 +1,26 @@
+{
+  "run": "e3_dlv3p_r50_ce",
+  "split": "test",
+  "ckpt": "best.pt",
+  "ckpt_epoch": 18,
+  "n_images": 1672,
+  "git_commit_trained": "ccd46cd",
+  "group_miou": 0.42948917243522705,
+  "group_pixel_acc": 0.8642280697822571,
+  "eval_size": [
+    384,
+    480
+  ],
+  "rellis_unseen_ignored": [
+    "mud"
+  ],
+  "group_miou_unseen_scored": 0.4298676958812022,
+  "group_iou_unseen_scored": {
+    "smooth_ground": 0.27097911634190247,
+    "rough_ground": 0.014861400680427928,
+    "vegetation": 0.815428505419291,
+    "water": 0.08466887652764371,
+    "obstacle": 0.47478081303778585,
+    "sky": 0.9184874632801625
+  }
+}

@@ -186,15 +186,22 @@ proposal planned $512^2$ inputs and about 50 epochs. We fixed the $384^2$,
 25-epoch schedule from a benchmark on the Apple M1 Pro on which we first
 trained (DeepLabV3+/ResNet-50: 0.64\,s per batch of 8 at $384^2$ versus 1.2\,s
 at $512^2$; mixed precision gave no speedup on MPS), and kept it on Colab
-because free T4 sessions end after about 12\,h and all 13 training runs (E0--E8
+because free T4 sessions end after about 12\,h and all 13 planned training runs (E0--E8
 plus four seed reruns) had to fit into a few sessions. Local training was
-abandoned after repeated validation hangs on the Apple GPU. Each epoch writes a
+abandoned after repeated validation hangs on the Apple GPU. In practice the
+free GPU quota ran out after E0--E8 and 23 epochs of the first seed rerun; we
+finished that run's last two epochs on the M1 Pro (no mixed precision) and
+dropped the other three seed reruns. A storage mishap also deleted the saved
+weights of the seed-0 E4--E7 runs after training. Their validation histories
+are intact, but they could not be evaluated on test, so the test numbers for
+the selected configuration (CE+Dice, Section~\ref{sec:res_loss}) come from its
+seed-1 replicate. Each epoch writes a
 full checkpoint (model, optimizer, scheduler, loss scaler) to Google Drive, and
 after a disconnect the orchestration script skips finished runs and resumes the
 interrupted one. The reduced schedule limits thin-structure accuracy (poles,
 signs, log edges) and may leave models under-trained, equally for every
 configuration. Seeds are fixed for Python, NumPy, PyTorch, and data shuffling
-(seed 0; seeds 1 and 2 for E9), but cuDNN autotuning and fp16 arithmetic make
+(seed 0; seed 1 for E9), but cuDNN autotuning and fp16 arithmetic make
 runs not bitwise reproducible.
 
 \subsection{Evaluation Metrics}
@@ -210,7 +217,13 @@ it~\cite{wigness2019rugd}) and would lower every model's mIoU by the same
 structural amount. Its per-class IoU and mIoU with \emph{bridge} are still
 reported. A class absent from a
 split's ground truth but predicted (\eg\emph{bicycle} on test) enters the mean
-with IoU 0. \textbf{Pixel accuracy} is the fraction of non-void pixels
+with IoU 0. Because validation lacks four classes, a model that sporadically
+predicts \emph{sand} or \emph{rock-bed} there gains two zero-IoU terms that a
+model never predicting them avoids. We therefore also report
+\textbf{GT-present mIoU}, the mean over classes that occur in the split's
+ground truth only, and check every validation comparison under both
+definitions. Selection itself uses the first definition, fixed before
+training. \textbf{Pixel accuracy} is the fraction of non-void pixels
 classified correctly. \textbf{Traversability groups}: predictions and labels
 are also mapped to six groups (Table~\ref{tab:groups}), fixed before any
 results were seen and coarser than GA-Nav's grouping~\cite{guan2022ganav}, and
@@ -266,11 +279,13 @@ configuration from random initialization under the same budget, so it measures
 the benefit of pretraining at a fixed budget rather than at convergence. An
 orchestration script (\texttt{scripts/run\_all.py}) runs the matrix and makes
 every selection automatically from \emph{validation} mIoU, logging each
-decision to a JSON file: (1)~the E0 sanity run must reach at least 0.70 mIoU on
-its own 50-image training subset, or the pipeline is considered broken and the
-matrix stops; (2)~the better of E2 and E3 becomes the architecture for E4--E8;
+decision to a JSON file: (1)~the E0 sanity run must memorize 10 training images
+(200 epochs, no augmentation) to at least 95\% pixel accuracy, or the pipeline
+is considered broken and the matrix stops (our first criterion, 0.70 mIoU, was
+miscalibrated: classes covering a few hundred pixels in 10 images are never
+predicted under unweighted CE, so it failed a working pipeline); (2)~the better of E2 and E3 becomes the architecture for E4--E8;
 (3)~the best loss is chosen among the CE winner and E4--E7; (4)~the two best
 configurations among E1--E7 are retrained with seeds 1 and 2 (E9). The test
 split is read only by the evaluation script, which refuses to run on it without
-an explicit confirmation flag, and only once per final configuration after all
-selection is complete.
+an explicit confirmation flag, and was run once per surviving checkpoint
+(E1--E3, E8, and the E7 seed-1 replicate) after all selection was complete.

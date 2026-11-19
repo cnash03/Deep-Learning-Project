@@ -1,0 +1,77 @@
+seed: 0
+data:
+  name: rugd
+  root: /content/data/rugd
+  img_size: 384
+  ignore_void: true
+  subset: null
+  val_on_train: false
+augment:
+  enabled: true
+  scale_crop: true
+  scale:
+  - 0.5
+  - 1.0
+  hflip: true
+  color_jitter: true
+model:
+  arch: unet
+  encoder: resnet18
+  pretrained: true
+loss:
+  name: ce
+  class_weights: null
+train:
+  epochs: 25
+  batch_size: 8
+  lr: 0.0003
+  weight_decay: 0.0001
+  warmup_steps: 200
+  amp: true
+  num_workers: 2
+  eval_every: 1
+  resume: true
+  out_dir: /content/drive/MyDrive/reading-the-trail/runs
+eval:
+  exclude_from_miou:
+  - bridge
+wandb:
+  enabled: false
+  project: reading-the-trail
+  entity: null
+run_name: e1_unet_r18_ce
+_meta:
+  git_commit: ccd46cd
+  torch: 2.14.1+cu130
+  device: cuda
+  gpu: Tesla T4
+  num_classes: 25
+  class_names:
+  - void
+  - dirt
+  - sand
+  - grass
+  - tree
+  - pole
+  - water
+  - sky
+  - vehicle
+  - container/generic-object
+  - asphalt
+  - gravel
+  - building
+  - mulch
+  - rock-bed
+  - log
+  - bicycle
+  - person
+  - fence
+  - bush
+  - sign
+  - rock
+  - bridge
+  - concrete
+  - picnic-table
+  n_train: 4779
+  n_val: 733
+  val_split: val

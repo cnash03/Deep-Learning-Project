@@ -43,18 +43,26 @@ Our contributions are:
         DeepLabV3+~\cite{chen2018deeplabv3plus} with ImageNet-pretrained
         ResNet-18/50 encoders~\cite{he2016resnet} on RUGD, changing one factor
         per experiment with automated, validation-only model selection.
-        \todo{architecture/encoder finding}.
+        The DeepLabV3+ decoder beats U-Net by about 2 mIoU points once a
+        metric artifact is removed, while a deeper encoder adds under 1.
   \item A per-class comparison of four imbalance-aware losses (median-frequency
         weighted cross-entropy, Dice, focal, cross-entropy plus Dice) against
         plain cross-entropy, focused on rare, safety-relevant terrain.
-        \todo{loss finding: which loss improves water/log/rock IoU, at what cost}.
-  \item An ablation of ImageNet pretraining and a three-seed estimate of
-        run-to-run variance for the two strongest configurations.
-        \todo{pretraining gap and seed std}.
+        Dice-based losses add about 3 points over CE, mostly on water, log,
+        and mid-frequency objects, at no cost to frequent classes;
+        median-frequency weighted CE lowers almost every class.
+  \item An ablation of ImageNet pretraining and an estimate of run-to-run
+        noise. Pretraining is worth about 6 points under our budget, and
+        validation mIoU can swing by 1--2 points from seed or epoch alone. We
+        also show that on a validation split missing classes, sporadic
+        predictions of those classes can manufacture differences of several
+        points.
   \item An exploratory and error analysis that documents RUGD's split shift
         (a test-only class, a validation split lacking four classes, and test
         hazards drawn almost entirely from one sequence) and evaluates the
         final model by confusion structure, boundary bands, traversability
         groups, and zero-shot transfer to RELLIS-3D.
-        \todo{RELLIS-3D group mIoU and drop relative to RUGD test.}
+        One unseen scene causes 80\% of test errors, labeling a shallow
+        stream as drivable ground, and zero-shot RELLIS-3D group mIoU drops
+        from 60.0\% to 43.4\%.
 \end{itemize}

@@ -1,0 +1,26 @@
+{
+  "run": "e7_ce_dice_s1",
+  "split": "test",
+  "ckpt": "best.pt",
+  "ckpt_epoch": 21,
+  "n_images": 1672,
+  "git_commit_trained": "2a1fa59",
+  "group_miou": 0.43437240488314804,
+  "group_pixel_acc": 0.8837128281593323,
+  "eval_size": [
+    384,
+    480
+  ],
+  "rellis_unseen_ignored": [
+    "mud"
+  ],
+  "group_miou_unseen_scored": 0.4358358645528979,
+  "group_iou_unseen_scored": {
+    "smooth_ground": 0.2537559001898827,
+    "rough_ground": 0.02257120489797345,
+    "vegetation": 0.8396661161229142,
+    "water": 0.021728126093925604,
+    "obstacle": 0.5304606043117269,
+    "sky": 0.9468332357009647
+  }
+}

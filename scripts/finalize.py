@@ -33,6 +33,9 @@ def main() -> None:
     ap.add_argument("--results", default="results")
     ap.add_argument("--data-root", default="data/rugd")
     ap.add_argument("--rellis", default="data/rellis")
+    ap.add_argument("--final-run", default=None,
+                    help="run to treat as the final model (default: decisions.json best_loss run). Use a seed "
+                         "replicate of the selected config if the selected run's weights are unavailable.")
     args = ap.parse_args()
 
     runs, results = Path(args.runs), Path(args.results)
@@ -43,7 +46,10 @@ def main() -> None:
         shutil.copy(Path(args.colab_results) / "decisions.json", results / "decisions.json")
     decisions = json.loads((results / "decisions.json").read_text())
     ce_run = decisions["best_arch"]["run"]
-    final_run = decisions["best_loss"]["run"]
+    final_run = args.final_run or decisions["best_loss"]["run"]
+    for name in (ce_run, final_run):
+        if not (runs / name / "best.pt").exists():
+            raise SystemExit(f"{runs / name / 'best.pt'} missing; pass --final-run <seed replicate>")
     print(f"CE architecture winner: {ce_run}; final (best-loss) model: {final_run}")
 
     # 2. Val + test evaluation of every finished run

@@ -17,7 +17,9 @@ report per-class and per-sequence results, not only mIoU.
 
 \textbf{Safety, dual use, licensing, and privacy.} The costliest errors are
 missed hazards, such as water labeled as drivable ground, and these are the
-rarest classes, so a high mIoU can hide them. Our models are research artifacts
+rarest classes, so a high mIoU can hide them. This risk materialized: on test,
+the final model labeled 55\% of water pixels as smooth ground and recognized
+no person pixels, while pixel accuracy outside the creek scene was 92\%. Our models are research artifacts
 evaluated offline, \emph{not} safety systems, and any driver-assist use would
 need independent validation, calibrated uncertainty, redundant sensing, and an
 advisory-only role. Both datasets involved the U.S. Army Research
@@ -26,8 +28,7 @@ military as well as civilian uses; we use only openly published methods and
 data. RELLIS-3D is licensed CC BY-NC-SA 3.0~\cite{jiang2021rellis}, so anything
 derived from it is non-commercial and shared alike; neither dataset's images
 are redistributed. No legible faces or plates appeared in inspected frames,
-our figures avoid identifiable people, and demo photographs are stripped of
-EXIF/GPS metadata and framed to exclude people and license plates.
+and our figures avoid identifiable people. We collected no new images.
 
 \subsection{Updated Risk and Ethics Reflection}
 \label{sec:reflection}
@@ -35,49 +36,4 @@ EXIF/GPS metadata and framed to exclude people and license plates.
 Table~\ref{tab:risks} compares the risks anticipated in our proposal with
 what emerged and how each was handled.
 
-\begin{table*}[t]
-  \centering
-  \caption{Updated risk and ethics reflection: anticipated (A) and newly emerged (N) issues and how each was handled.}
-  \label{tab:risks}
-  \footnotesize
-  \begin{tabular}{@{}p{2.9cm} p{6.7cm} p{7.2cm}@{}}
-    \toprule
-    Issue & What emerged & How it was managed \\
-    \midrule
-    Class imbalance (A) &
-      Worse than expected: 6,382:1 between \emph{tree} and \emph{sign};
-      safety classes 1.1\% of training pixels. &
-      Four imbalance-aware losses vs.\ CE; train-only median-frequency weights,
-      clipped at 50; per-class IoU reported. \\
-    Split shift (N) &
-      \emph{Bridge} only in test; validation lacks four classes; test is
-      hazard-heavy (safety classes 10.3\% vs.\ 1.1\%), driven by \emph{creek};
-      val closer to train than to test. &
-      Official split kept for comparability; \emph{bridge} excluded from headline
-      mIoU but reported; val and test reported separately; test per-class IoU;
-      test guarded by a flag and used once. \\
-    Leakage and labels (A) &
-      Labeled frames are near-duplicates (every fifth video frame); coarse
-      polygons, wires labeled \emph{tree}, sticks labeled \emph{log},
-      near-identical concrete/rock-bed colors. &
-      Sequence-level split verified (20-frame discrepancy with~\cite{wigness2019rugd}
-      disclosed); boundary-band analysis (Section~\ref{sec:error}); palette
-      caveat in captions. \\
-    Compute (A) &
-      Apple M1 Pro too slow at $512^2$ and unstable in validation; Colab T4
-      sessions capped at about 12\,h. &
-      $384^2$/25 epochs for \emph{all} runs; mixed precision on T4; per-epoch
-      checkpoints on Drive with automatic resume (Section~\ref{sec:compute}). \\
-    Domain shift (A) &
-      Different vehicle, viewpoint, and label mix in RELLIS-3D; \emph{mud} has
-      no RUGD counterpart. &
-      Group map fixed before evaluation; mud ignored in the headline score with
-      a sensitivity check; zero-shot only. \todo{update with outcome} \\
-    Safety, dual use, licensing &
-      Rare hazards are the most likely misses; Army-funded data;
-      RELLIS-3D is CC BY-NC-SA 3.0. &
-      Rare-class IoU reported; models presented as research artifacts;
-      non-commercial use; no redistribution of images. \\
-    \bottomrule
-  \end{tabular}
-\end{table*}
+
