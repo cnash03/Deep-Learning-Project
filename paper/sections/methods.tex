@@ -1,0 +1,291 @@
+\section{Methods}
+\label{sec:methods}
+
+Fig.~\ref{fig:arch} summarizes the pipeline shared by all experiments. Every
+experiment is one YAML file that inherits from a common base configuration, so
+runs differ only in the factor under study (Section~\ref{sec:protocol}).
+
+\begin{figure*}[t]
+  \centering
+  \resizebox{0.88\textwidth}{!}{\input{figures/architecture}}
+  \caption{Shared segmentation pipeline. Top: a $384\times384$ RGB frame is
+  encoded by an ImageNet-pretrained ResNet-18 or ResNet-50, decoded by U-Net
+  or DeepLabV3+, and mapped to 25 logits per pixel (24 RUGD classes plus
+  \emph{void}, which is ignored in the loss and never predicted). Each
+  experiment trains with exactly one loss variant. Bottom left: the U-Net
+  decoder concatenates encoder features at every scale from $1/16$ to $1/2$.
+  Bottom right: DeepLabV3+ dilates the last ResNet stage (output stride 16),
+  applies ASPP, and fuses the result with a single $1/4$-scale skip connection.
+  Channel counts are given for ResNet-18 / ResNet-50.}
+  \label{fig:arch}
+\end{figure*}
+
+\subsection{Data, Splits, and Exploratory Analysis}
+\label{sec:data}
+
+RUGD~\cite{wigness2019rugd} provides 7,436 annotated $688\times550$ frames,
+sampled every fifth video frame from 18 sequences. Neighboring frames are
+therefore near-duplicates, and we use the official sequence-level split, in which
+no sequence appears in two splits: 12 training sequences (4,779 frames), 2
+validation sequences (\emph{park-8}, \emph{trail-5}; 733 frames), and 4 test
+sequences (\emph{creek}, \emph{park-1}, \emph{trail-7}, \emph{trail-13}; 1,924
+frames). The assignment matches Table~I of~\cite{wigness2019rugd}; that table
+prints 4,759 and 1,964 training and test frames, 20 more than are released, and
+we use the counts verified on the released files. Color-coded labels are decoded
+to class indices with a lookup table built from the dataset's 25-entry colormap
+(\emph{void} plus 24 classes). No label pixel has a color outside the colormap.
+\emph{Void} covers only 0.023\% of pixels; it is mapped to an ignore index,
+contributes to neither loss nor metrics, and is never predicted.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.8\linewidth]{../results/figures/class_frequency.pdf}
+  \caption{Share of labeled (non-void) pixels per class and split, log scale.
+  Bars: training split, with the safety-relevant classes (water, log, rock,
+  rock-bed, dirt, sand) highlighted. Markers: validation and test shares.
+  \emph{Bridge} has no training pixels; validation lacks four classes.}
+  \label{fig:classfreq}
+\end{figure}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.9\textwidth]{../results/figures/sample_grid.pdf}
+  \caption{Sample frames and labels from each split. Labels are coarse
+  polygons; thin branches are labeled \emph{log}. In the official palette,
+  \emph{concrete} and \emph{rock-bed} are nearly the same olive color (the
+  \emph{creek} ground is rock-bed), as are \emph{mulch}/\emph{dirt} and
+  \emph{tree}/\emph{bicycle}.}
+  \label{fig:samples}
+\end{figure*}
+
+\textbf{Class imbalance.} Training pixel shares (Fig.~\ref{fig:classfreq}) span
+almost four orders of magnitude: \emph{tree} and \emph{grass} cover 63.2\%, and
+the ratio between the most and least frequent training classes (\emph{tree} and
+\emph{sign}) is 6,382:1. The classes we treat as safety-relevant, because they
+are hazards or deformable ground (water, log, rock, rock-bed, dirt, sand; RUGD
+has no \emph{mud} class), together cover 1.11\% of training pixels, and water
+occurs in only 7.5\% of training frames.
+
+\textbf{Distribution shift between splits.} The splits differ more than their
+sizes suggest (Fig.~\ref{fig:heatmap}). The safety classes cover 10.3\% of test
+pixels versus 1.1\% of training pixels; \emph{rock-bed} is $114\times$ and
+\emph{water} $8.9\times$ more frequent in test than in training. One sequence
+drives this: \emph{creek} (43.5\% of test frames) contains 97.9\% of all
+rock-bed, 76.3\% of all water, and 100\% of all \emph{bridge} pixels in the
+dataset. \emph{Bridge} therefore has zero training pixels but 4.6\,M test
+pixels, and validation contains no \emph{sand}, \emph{rock-bed},
+\emph{bicycle}, or \emph{bridge}, while test contains no \emph{bicycle}. The
+total-variation distance between split class distributions,
+$\tfrac12\sum_c|p_c-q_c|$, is 0.114 for train--val, 0.215 for train--test, and
+0.246 for val--test. Validation thus resembles training more than test, so
+validation scores, which drive all selection, likely overstate test
+performance (Section~\ref{sec:results}).
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.72\textwidth]{../results/figures/sequence_class_heatmap.pdf}
+  \caption{Class composition of every RUGD sequence (frames in parentheses) and
+  of each split: share of the sequence's labeled pixels (log color scale);
+  dots mark absent classes. Safety-relevant classes are highlighted. The test
+  sequence \emph{creek} alone supplies nearly all rock-bed, most water, and all
+  bridge pixels.}
+  \label{fig:heatmap}
+\end{figure*}
+
+\textbf{Label quality.} Visual inspection (Fig.~\ref{fig:samples}) shows that
+labels are coarse polygons whose edges do not follow ground-cover or
+canopy--sky boundaries; thin structures are folded into nearby classes (overhead
+wires are labeled \emph{tree}, thin sticks \emph{log}); ground-material labels
+(dirt, sand, gravel, mulch, concrete) depend on annotator judgment; and frames
+show saturated sky (35\% of pixels at $\geq250$ in the worst screened frames), hard shadows, strong
+lens vignetting, and motion blur near the low camera. We therefore expect a
+substantial share of errors near label boundaries and among ground materials,
+which motivates the boundary-band analysis in Section~\ref{sec:error}.
+
+\subsection{Preprocessing and Augmentation}
+
+Images are normalized with ImageNet statistics and transformed with
+Albumentations~\cite{buslaev2020albumentations}, using bilinear interpolation
+for images and nearest neighbor for masks. Training uses a random resized crop
+(50--100\% of the area, aspect ratio 0.75--1.33) to $384\times384$, horizontal
+flips ($p=0.5$), brightness/contrast jitter of $\pm0.3$ ($p=0.7$) to mimic shade
+and harsh sun, and a hue/saturation/value shift of $\pm5/\pm20/\pm10$
+($p=0.3$); vertical flips are not used because the sky is always on top. For
+evaluation, the full frame is resized to $384\times384$ without cropping, which
+squeezes it horizontally by a factor of 0.8 relative to the vertical axis, and all
+metrics are computed at this resolution against nearest-neighbor-resized labels.
+
+\subsection{Models}
+
+Both architectures come from Segmentation Models PyTorch
+(v0.6.0)~\cite{iakubovskii2019smp} on PyTorch~\cite{paszke2019pytorch}, with
+ResNet encoders~\cite{he2016resnet} initialized from ImageNet
+weights~\cite{deng2009imagenet} except in E8.
+\textbf{U-Net}~\cite{ronneberger2015unet} uses five decoder blocks (256, 128, 64,
+32, 16 channels) that upsample by $2\times$, concatenate the encoder features of
+matching resolution, and apply two $3\times3$ convolutions with batch
+normalization. \textbf{DeepLabV3+}~\cite{chen2018deeplabv3plus} dilates the last
+ResNet stage (output stride 16) and applies ASPP~\cite{chen2017deeplabv3} with
+separable atrous convolutions at rates 12, 24, and 36, a $1\times1$ branch, and
+image pooling (256 channels, dropout 0.5); the result is upsampled $4\times$,
+fused with 48-channel $1/4$-scale encoder features by a separable $3\times3$
+convolution, and upsampled $4\times$ to the 25 output logits.
+
+\subsection{Loss Functions}
+\label{sec:losses}
+
+Let $\Omega$ be the non-void pixels of a mini-batch, $y_i$ the label of pixel
+$i$, $z_{i,c}$ its logits, $p_{i,c}=\mathrm{softmax}_c(z_i)$,
+$g_{i,c}=\mathbb{1}[y_i=c]$, and $C=25$ the number of output channels.
+\textbf{Cross-entropy (CE)} is
+$\mathcal{L}_\mathrm{CE}=-\frac{1}{|\Omega|}\sum_{i\in\Omega}\log p_{i,y_i}$.
+\textbf{Weighted CE} uses PyTorch's normalization and median-frequency
+weights~\cite{eigen2015predicting}:
+\begin{equation}
+  \mathcal{L}_\mathrm{wCE} =
+  -\frac{\sum_{i\in\Omega} w_{y_i}\log p_{i,y_i}}{\sum_{i\in\Omega} w_{y_i}},
+  \label{eq:wce}
+\end{equation}
+with $w_c=\min(\operatorname{median}_k f_k/f_c,\,50)$, where $f_c$ is class $c$'s fraction of all labeled \emph{training} pixels (not,
+as in~\cite{eigen2015predicting}, only of images containing $c$), the median is
+over classes present in training, and absent classes (\emph{void},
+\emph{bridge}) get $w_c=0$. Weights range from 0.010 (\emph{tree}) to the clip
+value 50 (\emph{bicycle}, \emph{sign}); the median class is \emph{concrete}.
+\textbf{Dice}~\cite{milletari2016vnet} is computed per class over the whole
+batch and averaged over all $C$ channels:
+\begin{equation}
+  \mathcal{L}_\mathrm{Dice} = \frac{1}{C}\sum_{c=1}^{C} \delta_c
+  \Big(1-\frac{2\sum_{i\in\Omega}p_{i,c}g_{i,c}}
+  {\sum_{i\in\Omega}(p_{i,c}+g_{i,c})+\epsilon}\Big),
+\end{equation}
+where $\delta_c=\mathbb{1}[\sum_i g_{i,c}>0]$ zeroes classes absent from the
+batch and $\epsilon=10^{-7}$. \textbf{Focal}~\cite{lin2017focal} ($\gamma=2$,
+no $\alpha$) follows the library's one-vs-rest form with sigmoid probabilities
+$q_{i,c}=\sigma(z_{i,c})$:
+\begin{equation}
+  \mathcal{L}_\mathrm{Focal} = \frac{1}{C}\sum_{c=1}^{C}\frac{1}{|\Omega|}
+  \sum_{i\in\Omega} -(1-q^{t}_{i,c})^{\gamma}\log q^{t}_{i,c},
+\end{equation}
+with $q^{t}_{i,c}=q_{i,c}$ if $g_{i,c}=1$ and $1-q_{i,c}$ otherwise.
+\textbf{CE+Dice} is $\mathcal{L}_\mathrm{CE}+\mathcal{L}_\mathrm{Dice}$
+(unweighted CE, equal coefficients).
+
+\subsection{Training Setup and Compute}
+\label{sec:compute}
+
+All runs use AdamW~\cite{loshchilov2019adamw} (learning rate $3\times10^{-4}$,
+weight decay $10^{-4}$), batch size 8 (597 iterations per epoch, last partial
+batch dropped), and 25 epochs (14,925 steps), with a 200-step linear warm-up and
+per-step cosine decay to zero~\cite{loshchilov2017sgdr}. Validation mIoU is
+computed after every epoch, and the checkpoint with the highest validation mIoU,
+not the last one, is used for all reported evaluations.
+
+Training runs on one NVIDIA T4 GPU in free Google Colab sessions with CUDA
+mixed precision (fp16 autocast, dynamic loss scaling) and cuDNN autotuning. Our
+proposal planned $512^2$ inputs and about 50 epochs. We fixed the $384^2$,
+25-epoch schedule from a benchmark on the Apple M1 Pro on which we first
+trained (DeepLabV3+/ResNet-50: 0.64\,s per batch of 8 at $384^2$ versus 1.2\,s
+at $512^2$; mixed precision gave no speedup on MPS), and kept it on Colab
+because free T4 sessions end after about 12\,h and all 13 planned training runs (E0--E8
+plus four seed reruns) had to fit into a few sessions. Local training was
+abandoned after repeated validation hangs on the Apple GPU. In practice the
+free GPU quota ran out after E0--E8 and 23 epochs of the first seed rerun; we
+finished that run's last two epochs on the M1 Pro (no mixed precision) and
+dropped the other three seed reruns. A storage mishap also deleted the saved
+weights of the seed-0 E4--E7 runs after training. Their validation histories
+are intact, but they could not be evaluated on test, so the test numbers for
+the selected configuration (CE+Dice, Section~\ref{sec:res_loss}) come from its
+seed-1 replicate. Each epoch writes a
+full checkpoint (model, optimizer, scheduler, loss scaler) to Google Drive, and
+after a disconnect the orchestration script skips finished runs and resumes the
+interrupted one. The reduced schedule limits thin-structure accuracy (poles,
+signs, log edges) and may leave models under-trained, equally for every
+configuration. Seeds are fixed for Python, NumPy, PyTorch, and data shuffling
+(seed 0; seed 1 for E9), but cuDNN autotuning and fp16 arithmetic make
+runs not bitwise reproducible.
+
+\subsection{Evaluation Metrics}
+\label{sec:metrics}
+
+We accumulate a $25\times25$ confusion matrix over all non-void pixels of a
+split and compute per-class IoU, $\mathrm{IoU}_c =
+\mathrm{TP}_c/(\mathrm{TP}_c+\mathrm{FP}_c+\mathrm{FN}_c)$. \textbf{mIoU}
+averages IoU over classes that occur in the ground truth or the predictions,
+excluding \emph{void} and \emph{bridge}: with no training pixels, \emph{bridge}
+cannot be learned on this split (every RUGD baseline scores 0.0 on
+it~\cite{wigness2019rugd}) and would lower every model's mIoU by the same
+structural amount. Its per-class IoU and mIoU with \emph{bridge} are still
+reported. A class absent from a
+split's ground truth but predicted (\eg\emph{bicycle} on test) enters the mean
+with IoU 0. Because validation lacks four classes, a model that sporadically
+predicts \emph{sand} or \emph{rock-bed} there gains two zero-IoU terms that a
+model never predicting them avoids. We therefore also report
+\textbf{GT-present mIoU}, the mean over classes that occur in the split's
+ground truth only, and check every validation comparison under both
+definitions. Selection itself uses the first definition, fixed before
+training. \textbf{Pixel accuracy} is the fraction of non-void pixels
+classified correctly. \textbf{Traversability groups}: predictions and labels
+are also mapped to six groups (Table~\ref{tab:groups}), fixed before any
+results were seen and coarser than GA-Nav's grouping~\cite{guan2022ganav}, and
+we report group IoU and group mIoU.
+
+\begin{table}[t]
+  \centering
+  \caption{Six-group traversability map for group IoU and the RELLIS-3D test.
+  $^\ast$Ignored in the headline RELLIS-3D score (no RUGD counterpart).}
+  \label{tab:groups}
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}l p{3.15cm} p{2.55cm}@{}}
+    \toprule
+    Group & RUGD classes & RELLIS-3D classes \\
+    \midrule
+    Smooth ground & dirt, sand, asphalt, concrete, mulch & dirt, asphalt, concrete \\
+    Rough ground  & gravel, rock-bed & mud$^\ast$, rubble \\
+    Vegetation    & grass, bush & grass, bush \\
+    Water         & water & water, puddle \\
+    Obstacle      & tree, pole, vehicle, container, building, log, bicycle, person, fence, sign, rock, bridge, picnic-table
+                  & tree, pole, vehicle, object, building, log, person, fence, barrier \\
+    Sky           & sky & sky \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{RELLIS-3D protocol.} The final RUGD-trained model is evaluated
+zero-shot, without fine-tuning, on the official RELLIS-3D image test
+split~\cite{jiang2021rellis} (1,672 frames, $1920\times1200$). Predictions and
+labels are mapped to the six groups. RELLIS-3D \emph{mud} has no RUGD
+counterpart, so the headline group mIoU ignores mud pixels, following the same
+principle as excluding RUGD \emph{bridge}; scoring mud as rough ground is
+reported as a sensitivity check. Frames are resized to $384\times480$
+(height$\times$width), so the horizontal squeeze approximately matches the
+$688\times550\to384\times384$ squeeze seen in training (0.78 versus 0.80). Its label
+mix differs strongly from RUGD's: vegetation 52.6\% (grass 35.4, bush 17.2),
+sky 30.4\%, obstacle 11.4\% (tree 10.9), smooth ground 3.4\%, water 1.4\%
+(mostly puddle), and rough ground 0.8\% (almost all mud, so nearly absent from
+the headline score), versus 26.2\%, 8.2\%, and 42.8\% vegetation, sky, and
+obstacle in RUGD training. The official RELLIS-3D image split is frame-based,
+not sequence-based; this is irrelevant for zero-shot evaluation but would leak
+near-duplicates if a RELLIS-3D subset were used for fine-tuning.
+
+\subsection{Experimental Protocol}
+\label{sec:protocol}
+
+Each experiment changes one factor relative to its reference
+(Table~\ref{tab:main}): E1 is the U-Net/ResNet-18/CE baseline, E2 deepens the
+encoder to ResNet-50, E3 swaps the decoder for DeepLabV3+, E4--E7 replace CE
+with weighted CE, Dice, focal, and CE+Dice, and E8 repeats the best
+configuration from random initialization under the same budget, so it measures
+the benefit of pretraining at a fixed budget rather than at convergence. An
+orchestration script (\texttt{scripts/run\_all.py}) runs the matrix and makes
+every selection automatically from \emph{validation} mIoU, logging each
+decision to a JSON file: (1)~the E0 sanity run must memorize 10 training images
+(200 epochs, no augmentation) to at least 95\% pixel accuracy, or the pipeline
+is considered broken and the matrix stops (our first criterion, 0.70 mIoU, was
+miscalibrated: classes covering a few hundred pixels in 10 images are never
+predicted under unweighted CE, so it failed a working pipeline); (2)~the better of E2 and E3 becomes the architecture for E4--E8;
+(3)~the best loss is chosen among the CE winner and E4--E7; (4)~the two best
+configurations among E1--E7 are retrained with seeds 1 and 2 (E9). The test
+split is read only by the evaluation script, which refuses to run on it without
+an explicit confirmation flag, and was run once per surviving checkpoint
+(E1--E3, E8, and the E7 seed-1 replicate) after all selection was complete.

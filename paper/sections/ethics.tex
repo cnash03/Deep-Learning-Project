@@ -1,0 +1,39 @@
+\section{Ethical Considerations}
+\label{sec:ethics}
+
+\textbf{Representativeness and bias.} RUGD covers a few parks, trails, a
+creek, and a village, recorded by one small robot with a camera under 25\,cm
+above the ground~\cite{wigness2019rugd}. Season, geography, weather, and time
+of day are narrowly sampled; snow, desert, night, and heavy rain are absent,
+and there is no \emph{mud} class. A model trained here may look reliable on
+similar trails yet fail silently on unseen terrain or on the higher viewpoint
+of a full-size vehicle. A segmentation model has no demographic attributes, but
+the same principle applies: error rates differ across environments, and
+under-represented environments carry the least evidence. Even within RUGD,
+test hazards come almost entirely from one creek sequence, and people cover
+only 0.012\% of training pixels, so rare-class and \emph{person} IoU are weak
+evidence and must not be read as evidence of pedestrian safety. We therefore
+report per-class and per-sequence results, not only mIoU.
+
+\textbf{Safety, dual use, licensing, and privacy.} The costliest errors are
+missed hazards, such as water labeled as drivable ground, and these are the
+rarest classes, so a high mIoU can hide them. This risk materialized: on test,
+the final model labeled 55\% of water pixels as smooth ground and recognized
+no person pixels, while pixel accuracy outside the creek scene was 92\%. Our models are research artifacts
+evaluated offline, \emph{not} safety systems, and any driver-assist use would
+need independent validation, calibrated uncertainty, redundant sensing, and an
+advisory-only role. Both datasets involved the U.S. Army Research
+Laboratory~\cite{wigness2019rugd,jiang2021rellis}, and off-road autonomy has
+military as well as civilian uses; we use only openly published methods and
+data. RELLIS-3D is licensed CC BY-NC-SA 3.0~\cite{jiang2021rellis}, so anything
+derived from it is non-commercial and shared alike; neither dataset's images
+are redistributed. No legible faces or plates appeared in inspected frames,
+and our figures avoid identifiable people. We collected no new images.
+
+\subsection{Updated Risk and Ethics Reflection}
+\label{sec:reflection}
+
+Table~\ref{tab:risks} compares the risks anticipated in our proposal with
+what emerged and how each was handled.
+
+

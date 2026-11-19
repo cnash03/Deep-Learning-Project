@@ -1,0 +1,175 @@
+% All entries were checked against the publisher, CVF open-access, arXiv, or
+% official project pages (authors, title, venue, year, pages, DOI).
+% Benchmark numbers quoted in the paper come from the tables noted in comments.
+
+% ---------------------------------------------------------------- Datasets
+% RUGD benchmark: Tables II (val) and III (test), 24-class mIoU, ResNet-50
+% PSPNet/UPerNet variants at 688x555; Table I gives the sequence split.
+@inproceedings{wigness2019rugd,
+  author    = {Wigness, Maggie and Eum, Sungmin and Rogers, John G. and Han, David and Kwon, Heesung},
+  title     = {A {RUGD} Dataset for Autonomous Navigation and Visual Perception in Unstructured Outdoor Environments},
+  booktitle = {Proc. IEEE/RSJ Int. Conf. Intelligent Robots and Systems (IROS)},
+  year      = {2019},
+  pages     = {5000--5007},
+  doi       = {10.1109/IROS40897.2019.8968283}
+}
+
+% RELLIS-3D image benchmark: Table II (test split, 19/20-class image mIoU):
+% HRNetV2+OCR 51.55, Gated-SCNN 52.92. Image split 3,302/983/1,672.
+@inproceedings{jiang2021rellis,
+  author    = {Jiang, Peng and Osteen, Philip and Wigness, Maggie and Saripalli, Srikanth},
+  title     = {{RELLIS-3D} Dataset: Data, Benchmarks and Analysis},
+  booktitle = {Proc. IEEE Int. Conf. Robotics and Automation (ICRA)},
+  year      = {2021},
+  pages     = {1110--1116},
+  doi       = {10.1109/ICRA48506.2021.9561251}
+}
+
+@inproceedings{cordts2016cityscapes,
+  author    = {Cordts, Marius and Omran, Mohamed and Ramos, Sebastian and Rehfeld, Timo and Enzweiler, Markus and Benenson, Rodrigo and Franke, Uwe and Roth, Stefan and Schiele, Bernt},
+  title     = {The {Cityscapes} Dataset for Semantic Urban Scene Understanding},
+  booktitle = {Proc. IEEE Conf. Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2016},
+  pages     = {3213--3223},
+  doi       = {10.1109/CVPR.2016.350}
+}
+
+@inproceedings{deng2009imagenet,
+  author    = {Deng, Jia and Dong, Wei and Socher, Richard and Li, Li-Jia and Li, Kai and Fei-Fei, Li},
+  title     = {{ImageNet}: A Large-Scale Hierarchical Image Database},
+  booktitle = {Proc. IEEE Conf. Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2009},
+  pages     = {248--255},
+  doi       = {10.1109/CVPR.2009.5206848}
+}
+
+% ------------------------------------------------------------ Architectures
+@inproceedings{ronneberger2015unet,
+  author    = {Ronneberger, Olaf and Fischer, Philipp and Brox, Thomas},
+  title     = {{U-Net}: Convolutional Networks for Biomedical Image Segmentation},
+  booktitle = {Medical Image Computing and Computer-Assisted Intervention (MICCAI)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {9351},
+  publisher = {Springer},
+  year      = {2015},
+  pages     = {234--241},
+  doi       = {10.1007/978-3-319-24574-4_28}
+}
+
+@misc{chen2017deeplabv3,
+  author        = {Chen, Liang-Chieh and Papandreou, George and Schroff, Florian and Adam, Hartwig},
+  title         = {Rethinking Atrous Convolution for Semantic Image Segmentation},
+  year          = {2017},
+  howpublished  = {arXiv:1706.05587},
+  eprint        = {1706.05587},
+  archiveprefix = {arXiv}
+}
+
+@inproceedings{chen2018deeplabv3plus,
+  author    = {Chen, Liang-Chieh and Zhu, Yukun and Papandreou, George and Schroff, Florian and Adam, Hartwig},
+  title     = {Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation},
+  booktitle = {Proc. European Conf. Computer Vision (ECCV)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {11211},
+  publisher = {Springer},
+  year      = {2018},
+  pages     = {833--851},
+  doi       = {10.1007/978-3-030-01234-2_49}
+}
+
+@inproceedings{he2016resnet,
+  author    = {He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  title     = {Deep Residual Learning for Image Recognition},
+  booktitle = {Proc. IEEE Conf. Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2016},
+  pages     = {770--778},
+  doi       = {10.1109/CVPR.2016.90}
+}
+
+% ------------------------------------------------------------------ Losses
+@inproceedings{lin2017focal,
+  author    = {Lin, Tsung-Yi and Goyal, Priya and Girshick, Ross and He, Kaiming and Doll{\'a}r, Piotr},
+  title     = {Focal Loss for Dense Object Detection},
+  booktitle = {Proc. IEEE Int. Conf. Computer Vision (ICCV)},
+  year      = {2017},
+  pages     = {2980--2988},
+  doi       = {10.1109/ICCV.2017.324}
+}
+
+@inproceedings{milletari2016vnet,
+  author    = {Milletari, Fausto and Navab, Nassir and Ahmadi, Seyed-Ahmad},
+  title     = {{V-Net}: Fully Convolutional Neural Networks for Volumetric Medical Image Segmentation},
+  booktitle = {Proc. Int. Conf. 3D Vision (3DV)},
+  year      = {2016},
+  pages     = {565--571},
+  doi       = {10.1109/3DV.2016.79}
+}
+
+% Median-frequency balancing: Sec. 6.3.2, alpha_c = median_freq / freq(c).
+@inproceedings{eigen2015predicting,
+  author    = {Eigen, David and Fergus, Rob},
+  title     = {Predicting Depth, Surface Normals and Semantic Labels with a Common Multi-Scale Convolutional Architecture},
+  booktitle = {Proc. IEEE Int. Conf. Computer Vision (ICCV)},
+  year      = {2015},
+  pages     = {2650--2658},
+  doi       = {10.1109/ICCV.2015.304}
+}
+
+% ---------------------------------------------------------- Off-road methods
+% Table V (arXiv:2103.04233 version): 6 navigability groups
+% (smooth, rough, bumpy, forbidden, obstacle, background).
+% RUGD: DeepLabv3+ 55.88 mIoU, GA-Nav-r8 89.08 mIoU.
+% RELLIS-3D: DeepLabv3+ 62.27 mIoU, GA-Nav-r8 74.44 mIoU.
+@article{guan2022ganav,
+  author  = {Guan, Tianrui and Kothandaraman, Divya and Chandra, Rohan and Sathyamoorthy, Adarsh Jagan and Weerakoon, Kasun and Manocha, Dinesh},
+  title   = {{GA-Nav}: Efficient Terrain Segmentation for Robot Navigation in Unstructured Outdoor Environments},
+  journal = {IEEE Robotics and Automation Letters},
+  volume  = {7},
+  number  = {3},
+  pages   = {8138--8145},
+  year    = {2022},
+  doi     = {10.1109/LRA.2022.3187278}
+}
+
+% -------------------------------------------------------- Training / tools
+@inproceedings{loshchilov2019adamw,
+  author    = {Loshchilov, Ilya and Hutter, Frank},
+  title     = {Decoupled Weight Decay Regularization},
+  booktitle = {Proc. Int. Conf. Learning Representations (ICLR)},
+  year      = {2019}
+}
+
+@inproceedings{loshchilov2017sgdr,
+  author    = {Loshchilov, Ilya and Hutter, Frank},
+  title     = {{SGDR}: Stochastic Gradient Descent with Warm Restarts},
+  booktitle = {Proc. Int. Conf. Learning Representations (ICLR)},
+  year      = {2017}
+}
+
+@inproceedings{paszke2019pytorch,
+  author    = {Paszke, Adam and Gross, Sam and Massa, Francisco and Lerer, Adam and Bradbury, James and Chanan, Gregory and Killeen, Trevor and Lin, Zeming and Gimelshein, Natalia and Antiga, Luca and Desmaison, Alban and K{\"o}pf, Andreas and Yang, Edward and DeVito, Zachary and Raison, Martin and Tejani, Alykhan and Chilamkurthy, Sasank and Steiner, Benoit and Fang, Lu and Bai, Junjie and Chintala, Soumith},
+  title     = {{PyTorch}: An Imperative Style, High-Performance Deep Learning Library},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {32},
+  year      = {2019},
+  pages     = {8024--8035}
+}
+
+@article{buslaev2020albumentations,
+  author  = {Buslaev, Alexander and Iglovikov, Vladimir I. and Khvedchenya, Eugene and Parinov, Alex and Druzhinin, Mikhail and Kalinin, Alexandr A.},
+  title   = {Albumentations: Fast and Flexible Image Augmentations},
+  journal = {Information},
+  volume  = {11},
+  number  = {2},
+  pages   = {125},
+  year    = {2020},
+  doi     = {10.3390/info11020125}
+}
+
+@misc{iakubovskii2019smp,
+  author       = {Iakubovskii, Pavel},
+  title        = {Segmentation Models {PyTorch}},
+  year         = {2019},
+  howpublished = {GitHub repository, \url{https://github.com/qubvel-org/segmentation_models.pytorch}},
+  note         = {Version 0.6.0 used in this work}
+}

@@ -55,6 +55,8 @@ def main():
 
     seed_everything(cfg.get("seed", 0))
     device = get_device()
+    if device.type == "cuda":
+        torch.backends.cudnn.benchmark = True  # fixed input size -> pick fastest conv kernels
     amp = cfg["train"].get("amp", True) and device.type == "cuda"
     tc = cfg["train"]
 
@@ -65,12 +67,16 @@ def main():
     num_classes = train_ds.num_classes
     class_names = [c if isinstance(c, str) else c[0] for c in train_ds.classes]
     exclude = [0] if cfg["data"].get("ignore_void", True) else []
+    miou_exclude = exclude + [class_names.index(n) for n in cfg.get("eval", {}).get("exclude_from_miou", [])
+                              if n in class_names]
 
     g = torch.Generator().manual_seed(cfg.get("seed", 0))
     train_dl = DataLoader(train_ds, batch_size=tc["batch_size"], shuffle=True, drop_last=True,
-                          num_workers=tc.get("num_workers", 2), pin_memory=device.type == "cuda", generator=g)
+                          num_workers=tc.get("num_workers", 2), pin_memory=device.type == "cuda", generator=g,
+                          persistent_workers=tc.get("num_workers", 2) > 0)
     val_dl = DataLoader(val_ds, batch_size=tc["batch_size"], shuffle=False,
-                        num_workers=tc.get("num_workers", 2), pin_memory=device.type == "cuda")
+                        num_workers=tc.get("num_workers", 2), pin_memory=device.type == "cuda",
+                        persistent_workers=tc.get("num_workers", 2) > 0)
 
     model = build_model(cfg, num_classes).to(device)
     criterion = build_loss(cfg, num_classes, device)
@@ -98,7 +104,8 @@ def main():
         start_epoch, best_miou, history = ck["epoch"] + 1, ck["best_miou"], ck["history"]
         print(f"Resumed from {last_ckpt} at epoch {start_epoch}")
 
-    cfg["_meta"] = {"git_commit": git_commit(), "num_classes": num_classes, "class_names": class_names,
+    cfg["_meta"] = {"git_commit": git_commit(), "torch": str(torch.__version__), "device": str(device),
+                    "gpu": torch.cuda.get_device_name(0) if device.type == "cuda" else None, "num_classes": num_classes, "class_names": class_names,
                     "n_train": len(train_ds), "n_val": len(val_ds), "val_split": val_split}
     (out_dir / "config.yaml").write_text(yaml.safe_dump(cfg, sort_keys=False))
 
@@ -133,7 +140,7 @@ def main():
         if (epoch + 1) % tc.get("eval_every", 1) == 0 or epoch + 1 == tc["epochs"]:
             cm = validate(model, val_dl, num_classes, device, amp, exclude)
             iou = cm.iou().tolist()
-            rec.update({"val_miou": cm.miou(exclude), "val_pixel_acc": cm.pixel_acc(),
+            rec.update({"val_miou": cm.miou(miou_exclude), "val_pixel_acc": cm.pixel_acc(),
                         "val_iou": dict(zip(class_names, iou))})
             if rec["val_miou"] > best_miou:
                 best_miou = rec["val_miou"]

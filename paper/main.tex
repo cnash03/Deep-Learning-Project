@@ -1,0 +1,77 @@
+% Reading the Trail: Off-Road Terrain Analysis with Deep Convolutional Networks
+% Build: latexmk -pdf main.tex   (run inside paper/)
+%
+% Each section lives in sections/<name>.tex so team members can edit in parallel.
+% Result-dependent text is marked with \todo{...} (inline note) or \tbd (a number
+% still to be filled in). Search for "\todo" and "\tbd" before submission; setting
+% \finaltrue below turns any leftover placeholder into a compile error.
+\documentclass[conference]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{siunitx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
+\usepackage[hidelinks]{hyperref}
+\usepackage{cite}
+
+% ---------------------------------------------------------------------------
+% Placeholder macros (visible in the PDF).
+\newif\iffinal
+\finaltrue
+\iffinal
+  \newcommand{\todo}[1]{\errmessage{Unresolved TODO: #1}}
+  \newcommand{\tbd}{\errmessage{Unresolved TBD number}}
+\else
+  \newcommand{\todo}[1]{{\color{red!75!black}\textbf{[TODO:~#1]}}}
+  \newcommand{\tbd}{{\color{red!75!black}\textbf{??}}}
+\fi
+% A framed box standing in for a figure that does not exist yet.
+\newcommand{\placeholderfig}[2]{%
+  \fbox{\parbox[c][#1][c]{0.95\linewidth}{\centering\color{red!75!black}%
+  \textbf{[FIGURE PLACEHOLDER]}\\[2pt]\footnotesize #2}}}
+
+% Notation.
+\newcommand{\etal}{et~al.}
+\newcommand{\miou}{mIoU}
+\newcommand{\eg}{e.g.,\ }
+\newcommand{\ie}{i.e.,\ }
+
+\begin{document}
+
+\title{Reading the Trail: Off-Road Terrain Analysis\\with Deep Convolutional Networks}
+
+\author{%
+\IEEEauthorblockN{Callen Nash}
+\IEEEauthorblockA{\textit{Model \& documentation lead}\\
+Colorado School of Mines\\
+Golden, CO, USA}
+\and
+\IEEEauthorblockN{Xander Navojosky}
+\IEEEauthorblockA{\textit{Data \& evaluation lead}\\
+Colorado School of Mines\\
+Golden, CO, USA}
+}
+
+\maketitle
+
+\input{sections/abstract}
+
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/methods}
+\input{sections/experiments}
+\input{sections/error_analysis}
+\input{sections/discussion}
+\input{sections/ethics}
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

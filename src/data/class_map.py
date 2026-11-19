@@ -4,8 +4,8 @@ Used for (a) traversability-group IoU on RUGD and (b) the cross-dataset test:
 a RUGD-trained model's predictions are mapped to groups and scored against
 RELLIS-3D labels mapped the same way.
 
-Group assignments are a project decision. Revisit them in Week 1 and record
-the final choice in the paper's Methods section.
+Group assignments are a project decision, documented in the paper's Methods
+section (Table of traversability groups).
 """
 from __future__ import annotations
 
@@ -79,6 +79,14 @@ def _lut(class_names: list[str], mapping: dict[str, str | None]) -> np.ndarray:
 
 RUGD_GROUP_LUT = _lut([n for n, _ in RUGD_CLASSES], RUGD_TO_GROUP)
 RELLIS_GROUP_LUT = _lut(RELLIS_CLASSES, RELLIS_TO_GROUP)
+
+# RELLIS classes with no RUGD counterpart: a RUGD-trained model cannot have learned them, so the
+# headline cross-dataset score ignores them (same rule as excluding RUGD `bridge`, which has no
+# training pixels). Scoring mud as rough_ground is reported as a sensitivity check.
+RELLIS_UNSEEN = ["mud"]
+RELLIS_GROUP_LUT_SEEN = RELLIS_GROUP_LUT.copy()
+for _name in RELLIS_UNSEEN:
+    RELLIS_GROUP_LUT_SEEN[RELLIS_CLASSES.index(_name)] = IGNORE_INDEX
 
 
 def to_groups(index_mask, lut: np.ndarray):

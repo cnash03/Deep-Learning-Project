@@ -1,0 +1,5 @@
+sequence,n_images,miou,pixel_acc,mean_image_miou
+creek,836,0.1374,0.5531,0.3400
+park-1,627,0.4036,0.9171,0.5364
+trail-7,289,0.2935,0.9293,0.6225
+trail-13,172,0.3300,0.9202,0.6111

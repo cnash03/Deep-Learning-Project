@@ -1,0 +1,42 @@
+[2026-11-17 19:15:01] start e0_overfit: configs/e0_overfit.yaml run_name=e0_overfit train.out_dir=/content/drive/MyDrive/reading-the-trail/runs train.num_workers=2
+[2026-11-17 19:21:49] done e0_overfit in 0.11 h, best val mIoU 0.6852
+[2026-11-17 19:21:49] E0 passed: pixel acc 0.980, mIoU 0.685
+[2026-11-17 19:21:49] start e1_unet_r18_ce: configs/e1_unet_r18_ce.yaml run_name=e1_unet_r18_ce train.out_dir=/content/drive/MyDrive/reading-the-trail/runs train.num_workers=2
+[2026-11-17 20:27:06] done e1_unet_r18_ce in 1.09 h, best val mIoU 0.3706
+[2026-11-17 20:27:06] start e2_unet_r50_ce: configs/e2_unet_r50_ce.yaml run_name=e2_unet_r50_ce train.out_dir=/content/drive/MyDrive/reading-the-trail/runs train.num_workers=2
+[2026-11-17 21:44:09] done e2_unet_r50_ce in 1.28 h, best val mIoU 0.3770
+[2026-11-17 21:44:09] start e3_dlv3p_r50_ce: configs/e3_dlv3p_r50_ce.yaml run_name=e3_dlv3p_r50_ce train.out_dir=/content/drive/MyDrive/reading-the-trail/runs train.num_workers=2
+[2026-11-17 22:56:03] done e3_dlv3p_r50_ce in 1.20 h, best val mIoU 0.4332
+[2026-11-17 22:56:03] best architecture: e3_dlv3p_r50_ce (deeplabv3plus/resnet50)
+[2026-11-17 22:56:03] start e4_weighted_ce: configs/e4_weighted_ce.yaml run_name=e4_weighted_ce train.out_dir=/content/drive/MyDrive/reading-the-trail/runs train.num_workers=2
+[2026-11-18 04:27:43] skip e0_overfit (done, best val mIoU 0.6852)
+[2026-11-18 04:27:44] E0 passed: pixel acc 0.980, mIoU 0.685
+[2026-11-18 04:27:45] skip e1_unet_r18_ce (done, best val mIoU 0.3706)
+[2026-11-18 04:27:45] skip e2_unet_r50_ce (done, best val mIoU 0.3770)
+[2026-11-18 04:27:46] skip e3_dlv3p_r50_ce (done, best val mIoU 0.4332)
+[2026-11-18 04:27:46] best architecture: e3_dlv3p_r50_ce (deeplabv3plus/resnet50)
+[2026-11-18 04:27:46] start e4_weighted_ce: configs/e4_weighted_ce.yaml run_name=e4_weighted_ce train.out_dir=/content/drive/MyDrive/reading-the-trail/runs train.num_workers=2
+[2026-11-18 05:08:10] done e4_weighted_ce in 0.67 h, best val mIoU 0.3374
+[2026-11-18 05:08:10] start e5_dice: configs/e5_dice.yaml run_name=e5_dice train.out_dir=/content/drive/MyDrive/reading-the-trail/runs train.num_workers=2
+[2026-11-18 06:22:28] done e5_dice in 1.24 h, best val mIoU 0.4235
+[2026-11-18 06:22:28] start e6_focal: configs/e6_focal.yaml run_name=e6_focal train.out_dir=/content/drive/MyDrive/reading-the-trail/runs train.num_workers=2
+[2026-11-18 08:10:50] done e6_focal in 1.81 h, best val mIoU 0.4110
+[2026-11-18 08:10:50] start e7_ce_dice: configs/e7_ce_dice.yaml run_name=e7_ce_dice train.out_dir=/content/drive/MyDrive/reading-the-trail/runs train.num_workers=2
+[2026-11-18 09:24:32] done e7_ce_dice in 1.23 h, best val mIoU 0.4424
+[2026-11-18 09:24:32] best loss: ce_dice (e7_ce_dice)
+[2026-11-18 09:24:32] start e8_no_pretrain: configs/e8_no_pretrain.yaml run_name=e8_no_pretrain train.out_dir=/content/drive/MyDrive/reading-the-trail/runs train.num_workers=2 loss.name=ce_dice loss.ce_weight=1.0 loss.dice_weight=1.0
+[2026-11-18 23:46:23] skip e0_overfit (done, best val mIoU 0.6852)
+[2026-11-18 23:46:24] E0 passed: pixel acc 0.980, mIoU 0.685
+[2026-11-18 23:46:26] skip e1_unet_r18_ce (done, best val mIoU 0.3706)
+[2026-11-18 23:46:27] skip e2_unet_r50_ce (done, best val mIoU 0.3770)
+[2026-11-18 23:46:28] skip e3_dlv3p_r50_ce (done, best val mIoU 0.4332)
+[2026-11-18 23:46:28] best architecture: e3_dlv3p_r50_ce (deeplabv3plus/resnet50)
+[2026-11-18 23:46:30] skip e4_weighted_ce (done, best val mIoU 0.3374)
+[2026-11-18 23:46:31] skip e5_dice (done, best val mIoU 0.4235)
+[2026-11-18 23:46:32] skip e6_focal (done, best val mIoU 0.4110)
+[2026-11-18 23:46:34] skip e7_ce_dice (done, best val mIoU 0.4424)
+[2026-11-18 23:46:34] best loss: ce_dice (e7_ce_dice)
+[2026-11-18 23:46:35] start e8_no_pretrain: configs/e8_no_pretrain.yaml run_name=e8_no_pretrain train.out_dir=/content/drive/MyDrive/reading-the-trail/runs train.num_workers=2 loss.name=ce_dice loss.ce_weight=1.0 loss.dice_weight=1.0
+[2026-11-19 00:41:25] done e8_no_pretrain in 0.91 h, best val mIoU 0.3851
+[2026-11-19 00:41:25] seed runs for: ['e7_ce_dice', 'e3_dlv3p_r50_ce']
+[2026-11-19 00:41:25] start e7_ce_dice_s1: configs/e7_ce_dice.yaml run_name=e7_ce_dice_s1 train.out_dir=/content/drive/MyDrive/reading-the-trail/runs train.num_workers=2 seed=1

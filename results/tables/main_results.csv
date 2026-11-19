@@ -1,0 +1,9 @@
+id,run,arch,encoder,loss,pretrained,seeds,best_val_miou_mean,best_val_miou_std,best_val_miou_n,val_miou_mean,val_miou_std,val_miou_n,val_pixel_acc_mean,val_pixel_acc_std,val_pixel_acc_n,val_group_miou_mean,val_group_miou_std,val_group_miou_n,test_miou_mean,test_miou_std,test_miou_n,test_pixel_acc_mean,test_pixel_acc_std,test_pixel_acc_n,test_group_miou_mean,test_group_miou_std,test_group_miou_n
+E1,e1_unet_r18_ce,U-Net,ResNet-18,CE,ImageNet,1,0.3706,,1,0.3706,,1,0.9067,,1,0.7556,,1,0.3420,,1,0.7605,,1,0.5860,,1
+E2,e2_unet_r50_ce,U-Net,ResNet-50,CE,ImageNet,1,0.3770,,1,0.3770,,1,0.9077,,1,0.7677,,1,0.3398,,1,0.7610,,1,0.6088,,1
+E3,e3_dlv3p_r50_ce,DeepLabV3+,ResNet-50,CE,ImageNet,1,0.4332,,1,0.4332,,1,0.9086,,1,0.7662,,1,0.3695,,1,0.7741,,1,0.6266,,1
+E4,e4_weighted_ce,DeepLabV3+,ResNet-50,Weighted CE,ImageNet,1,0.3374,,1,,,0,,,0,,,0,,,0,,,0,,,0
+E5,e5_dice,DeepLabV3+,ResNet-50,Dice,ImageNet,1,0.4235,,1,,,0,,,0,,,0,,,0,,,0,,,0
+E6,e6_focal,DeepLabV3+,ResNet-50,Focal,ImageNet,1,0.4110,,1,,,0,,,0,,,0,,,0,,,0,,,0
+E7,e7_ce_dice,DeepLabV3+,ResNet-50,CE + Dice,ImageNet,2,0.4472,0.0068,2,0.4520,,1,0.9086,,1,0.7740,,1,0.3768,,1,0.7647,,1,0.6002,,1
+E8,e8_no_pretrain,DeepLabV3+,ResNet-50,CE + Dice,none,1,0.3851,,1,0.3851,,1,0.8985,,1,0.7499,,1,0.3219,,1,0.7392,,1,0.5822,,1

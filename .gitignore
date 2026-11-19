@@ -13,3 +13,15 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 .DS_Store
+/runs_colab/
+/reading-the-trail/
+
+# LaTeX build files
+/video/*.aux
+/video/*.fdb_latexmk
+/video/*.fls
+/video/*.log
+/video/*.nav
+/video/*.out
+/video/*.snm
+/video/*.toc

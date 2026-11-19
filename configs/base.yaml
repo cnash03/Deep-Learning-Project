@@ -4,7 +4,7 @@ seed: 0
 data:
   name: rugd
   root: data/rugd        # or set the DATA_ROOT env var
-  img_size: 512          # drop to 384 if GPU memory is tight
+  img_size: 384          # proposal fallback; 512 doubles step time on our hardware (see build.md)
   ignore_void: true      # void pixels are excluded from loss and metrics
   subset: null           # int -> evenly spaced subset of each split (debugging)
   val_on_train: false    # E0 only
@@ -26,16 +26,21 @@ loss:
   class_weights: null    # path to JSON from scripts/compute_class_weights.py
 
 train:
-  epochs: 50
+  epochs: 25
   batch_size: 8
   lr: 3.0e-4
   weight_decay: 1.0e-4
   warmup_steps: 200
-  amp: true
-  num_workers: 2
+  amp: true             # CUDA only; no speedup on Apple MPS (benchmarked)
+  num_workers: 4
   eval_every: 1
   resume: true
   out_dir: runs          # on Colab: /content/drive/MyDrive/reading-the-trail/runs
+
+eval:
+  # Classes left out of the headline mIoU (still reported per class).
+  # bridge has 0 training pixels but 4.6M test pixels, so it cannot be learned.
+  exclude_from_miou: [bridge]
 
 wandb:
   enabled: false

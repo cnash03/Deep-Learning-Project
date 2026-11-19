@@ -1,0 +1,68 @@
+\section{Introduction and Motivation}
+\label{sec:intro}
+
+Most work on visual perception for autonomous driving targets paved urban
+streets, where lane markings, curbs, and signs give a model strong geometric
+and semantic structure~\cite{cordts2016cityscapes}. Off-road terrain offers
+none of this. Boundaries between grass, mulch, and gravel are irregular and
+often ambiguous, lighting changes abruptly under tree cover, and a camera on a
+small vehicle shakes and blurs as it crosses rough
+ground~\cite{wigness2019rugd}. Yet many high-value uses of autonomy happen
+off-road: search-and-rescue and disaster-relief robots, agricultural and
+forestry vehicles, planetary rovers, and military logistics. For these
+systems, and for driver-assist cameras on consumer off-road vehicles,
+distinguishing drivable dirt from standing water or a fallen log is a central
+perception problem, and a mistake can leave a vehicle stuck or damaged.
+
+We treat terrain understanding as \emph{semantic segmentation}: assign each
+pixel of a forward-facing camera image one of the 24 terrain and object
+classes of the RUGD dataset~\cite{wigness2019rugd}. Two properties make this
+harder than urban segmentation. First, the label distribution is extremely
+skewed: in the RUGD training split, \emph{tree} and \emph{grass} cover 63\% of
+labeled pixels, the most and least frequent classes differ by a factor of
+6,382, and \emph{water}, \emph{rock}, and \emph{log} together cover 0.72\%
+(Fig.~\ref{fig:classfreq}), even though these rare classes are the ones most
+relevant to safe driving. Second, RUGD is small (7,436 annotated frames from 18
+video sequences), its frames are strongly correlated in time, and its official
+splits differ in composition: hazardous terrain is about nine times more common
+in the test split than in training, so validation scores are an optimistic
+guide to test performance.
+
+This project asks three questions that transfer beyond off-road driving:
+(i)~how much do the decoder design and the encoder depth matter when both
+start from ImageNet-pretrained weights; (ii)~which class-imbalance loss most
+improves accuracy on rare, safety-relevant classes without sacrificing overall
+accuracy; and (iii)~how much does ImageNet pretraining help on scenes far from
+its training distribution. As a stretch goal, we test how a RUGD-trained model
+transfers to RELLIS-3D~\cite{jiang2021rellis}, which was recorded with a
+different vehicle in a different environment.
+
+Our contributions are:
+\begin{itemize}
+  \item A controlled comparison of U-Net~\cite{ronneberger2015unet} and
+        DeepLabV3+~\cite{chen2018deeplabv3plus} with ImageNet-pretrained
+        ResNet-18/50 encoders~\cite{he2016resnet} on RUGD, changing one factor
+        per experiment with automated, validation-only model selection.
+        The DeepLabV3+ decoder beats U-Net by about 2 mIoU points once a
+        metric artifact is removed, while a deeper encoder adds under 1.
+  \item A per-class comparison of four imbalance-aware losses (median-frequency
+        weighted cross-entropy, Dice, focal, cross-entropy plus Dice) against
+        plain cross-entropy, focused on rare, safety-relevant terrain.
+        Dice-based losses add about 3 points over CE, mostly on water, log,
+        and mid-frequency objects, at no cost to frequent classes;
+        median-frequency weighted CE lowers almost every class.
+  \item An ablation of ImageNet pretraining and an estimate of run-to-run
+        noise. Pretraining is worth about 6 points under our budget, and
+        validation mIoU can swing by 1--2 points from seed or epoch alone. We
+        also show that on a validation split missing classes, sporadic
+        predictions of those classes can manufacture differences of several
+        points.
+  \item An exploratory and error analysis that documents RUGD's split shift
+        (a test-only class, a validation split lacking four classes, and test
+        hazards drawn almost entirely from one sequence) and evaluates the
+        final model by confusion structure, boundary bands, traversability
+        groups, and zero-shot transfer to RELLIS-3D.
+        One unseen scene causes 80\% of test errors, labeling a shallow
+        stream as drivable ground, and zero-shot RELLIS-3D group mIoU drops
+        from 60.0\% to 43.4\%.
+\end{itemize}

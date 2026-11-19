@@ -1,0 +1,131 @@
+% Architecture diagram (fig:arch). Self-contained tikzpicture: needs tikz with
+% libraries arrows.meta, positioning, fit, backgrounds, calc.
+% Included by main.tex (scaled to \textwidth) and by architecture_standalone.tex (PNG export).
+\begin{tikzpicture}[
+  font=\footnotesize,
+  >={Stealth[length=2.2mm]},
+  flow/.style={->, thick, draw=black!75},
+  skip/.style={->, thick, draw=orange!80!black},
+  lowskip/.style={->, thick, draw=violet!80!black},
+  box/.style={draw=black!70, rounded corners=2pt, align=center, inner sep=3pt},
+  enc/.style={box, draw=blue!55!black, fill=blue!10, minimum width=3.0cm, minimum height=0.62cm, font=\scriptsize},
+  encdim/.style={enc, draw=blue!30, fill=blue!4, text=black!55},
+  udec/.style={box, draw=orange!75!black, fill=orange!12, minimum width=2.9cm, minimum height=0.62cm, font=\scriptsize},
+  ddec/.style={box, draw=violet!75!black, fill=violet!10, minimum height=0.62cm, font=\scriptsize},
+  head/.style={box, draw=black!60, fill=black!6, minimum height=0.62cm, font=\scriptsize},
+  panel/.style={draw=black!35, rounded corners=4pt, inner sep=6pt},
+  ptitle/.style={font=\small\bfseries, anchor=south west},
+  lbl/.style={font=\scriptsize, text=black!70},
+]
+
+% =====================================================================
+% TOP: shared pipeline
+% =====================================================================
+\begin{scope}[yshift=0.45cm]
+  % Input "image" icon: sky / tree line / trail.
+  \begin{scope}[shift={(0,-0.75)}]
+    \fill[blue!30] (0,0.95) rectangle (1.8,1.5);
+    \fill[green!45!black!70] (0,0.55) -- (0.3,1.05) -- (0.55,0.8) -- (0.85,1.15) -- (1.15,0.85) -- (1.45,1.1) -- (1.8,0.8) -- (1.8,0.55) -- cycle;
+    \fill[green!55!black!45] (0,0) rectangle (1.8,0.58);
+    \fill[brown!55] (0.6,0) -- (0.85,0.58) -- (0.98,0.58) -- (1.35,0) -- cycle;
+    \draw[black!70] (0,0) rectangle (1.8,1.5);
+  \end{scope}
+  \node[lbl, align=center, anchor=north] (inlbl) at (0.9,-0.8) {RGB input\\$3\times384\times384$\\ImageNet-normalized};
+  \coordinate (inR) at (1.8,0);
+
+  % Encoder trapezoid (wide input side, narrow deep side).
+  \draw[draw=blue!55!black, fill=blue!10, rounded corners=1pt]
+    (3.0,-1.1) -- (3.0,1.1) -- (5.75,0.6) -- (5.75,-0.6) -- cycle;
+  \coordinate (encW) at (3.0,0); \coordinate (encE) at (5.75,0);
+  \node[align=center, font=\footnotesize, inner sep=0pt] (enc) at (4.3,0) {\textbf{Encoder}\\ResNet-18 / -50\\ImageNet init.\\{\scriptsize features $\tfrac12\ldots\tfrac1{32}$}};
+  \draw[flow] (inR) -- (encW);
+
+  % Decoder choices.
+  \node[udec, minimum width=3.1cm, font=\footnotesize] (dU) at (8.55,0.52) {\textbf{(a) U-Net decoder}\\skips at every scale};
+  \node[ddec, minimum width=3.1cm, font=\footnotesize] (dD) at (8.55,-0.62) {\textbf{(b) DeepLabV3+ decoder}\\ASPP @ $\tfrac1{16}$ + skip @ $\tfrac14$};
+  \node[lbl, font=\scriptsize\itshape] at (8.55,-0.05) {or};
+  \node[draw=black!40, dashed, rounded corners=3pt, fit=(dU)(dD), inner sep=3pt] (dec) {};
+  \draw[flow] (encE) -- (encE -| dec.west);
+
+  % Logits.
+  \node[head, minimum width=2.1cm, minimum height=1.0cm, font=\footnotesize] (logit) at (12.0,0) {\textbf{Logits}\\$25\times384\times384$};
+  \draw[flow] (dec.east) -- (logit.west);
+
+  % Training loss and evaluation.
+  \node[box, draw=red!60!black, fill=red!6, text width=4.15cm, font=\scriptsize, anchor=west] (loss) at (13.75,0.5)
+    {\textbf{Training loss} (one per run)\\CE $\cdot$ weighted CE (median-freq.)\\Dice $\cdot$ Focal ($\gamma{=}2$) $\cdot$ CE+Dice\\void pixels ignored};
+  \node[box, draw=green!45!black, fill=green!7, text width=4.15cm, font=\scriptsize, anchor=west] (eval) at (13.75,-0.72)
+    {\textbf{Evaluation}: argmax (void masked)\\per-class IoU, mIoU, 6-group IoU};
+  \draw[flow] (logit.east) -- ++(0.25,0) |- (loss.west);
+  \draw[flow] (logit.east) -- ++(0.25,0) |- (eval.west);
+\end{scope}
+
+% =====================================================================
+% Shared helper geometry for the two detail panels.
+%   rows: y(1/1)=-2.75, y(1/2)=-3.5, y(1/4)=-4.25, y(1/8)=-5.0, y(1/16)=-5.75, y(1/32)=-6.5
+% =====================================================================
+\def\yA{-2.75}\def\yB{-3.5}\def\yC{-4.25}\def\yD{-5.0}\def\yE{-5.75}\def\yF{-6.5}
+
+% =====================================================================
+% BOTTOM LEFT: (a) U-Net
+% =====================================================================
+\begin{scope}[xshift=0cm]
+  \node[lbl] (uin) at (1.6,\yA) {input $384^2$};
+  \node[enc] (u1) at (1.6,\yB) {stem\enspace$\tfrac12$\enspace 64 | 64};
+  \node[enc] (u2) at (1.6,\yC) {layer1\enspace$\tfrac14$\enspace 64 | 256};
+  \node[enc] (u3) at (1.6,\yD) {layer2\enspace$\tfrac18$\enspace 128 | 512};
+  \node[enc] (u4) at (1.6,\yE) {layer3\enspace$\tfrac1{16}$\enspace 256 | 1024};
+  \node[enc] (u5) at (1.6,\yF) {layer4\enspace$\tfrac1{32}$\enspace 512 | 2048};
+  \foreach \a/\b in {uin/u1,u1/u2,u2/u3,u3/u4,u4/u5} \draw[flow] (\a) -- (\b);
+
+  \node[udec] (ud1) at (6.45,\yE) {up$\times$2, concat, 2$\times$conv\enspace 256};
+  \node[udec] (ud2) at (6.45,\yD) {up$\times$2, concat, 2$\times$conv\enspace 128};
+  \node[udec] (ud3) at (6.45,\yC) {up$\times$2, concat, 2$\times$conv\enspace 64};
+  \node[udec] (ud4) at (6.45,\yB) {up$\times$2, concat, 2$\times$conv\enspace 32};
+  \node[udec] (ud5) at (6.45,\yA) {up$\times$2, 2$\times$conv\enspace 16};
+  \foreach \a/\b in {ud1/ud2,ud2/ud3,ud3/ud4,ud4/ud5} \draw[flow] (\a) -- (\b);
+  \draw[flow] (u5.east) -| (ud1.south);
+
+  \foreach \e/\d in {u1/ud4,u2/ud3,u3/ud2,u4/ud1} \draw[skip] (\e.east) -- (\d.west);
+  \node[lbl, text=orange!70!black, anchor=north] at ($(u4.east)!0.5!(ud1.west)+(0,-0.03)$) {skips};
+
+  \node[head] (uh) at (9.45,\yA) {3$\times$3 conv\\$\to$ 25};
+  \draw[flow] (ud5) -- (uh);
+\end{scope}
+\node[panel, fit=(uin)(u5)(ud5)(uh)(ud1)] (pa) {};
+\node[ptitle] at (pa.north west) {(a) U-Net};
+
+% =====================================================================
+% BOTTOM RIGHT: (b) DeepLabV3+
+% =====================================================================
+\begin{scope}[xshift=11.0cm]
+  \node[lbl] (din) at (1.6,\yA) {input $384^2$};
+  \node[encdim] (d1) at (1.6,\yB) {stem\enspace$\tfrac12$\enspace 64 | 64};
+  \node[enc] (d2) at (1.6,\yC) {layer1\enspace$\tfrac14$\enspace 64 | 256};
+  \node[encdim] (d3) at (1.6,\yD) {layer2\enspace$\tfrac18$\enspace 128 | 512};
+  \node[encdim] (d4) at (1.6,\yE) {layer3\enspace$\tfrac1{16}$\enspace 256 | 1024};
+  \node[enc] (d5) at (1.6,\yF) {layer4\enspace$\tfrac1{16}$ (dilated)\enspace 512 | 2048};
+  \foreach \a/\b in {din/d1,d1/d2,d2/d3,d3/d4,d4/d5} \draw[flow] (\a) -- (\b);
+
+  \node[ddec, text width=2.3cm, anchor=west] (aspp) at (4.4,\yF)
+    {\textbf{ASPP} @ $\tfrac1{16}$: 1$\times$1, rates 12/24/36, image pool $\to$ 256};
+  \draw[flow] (d5.east) -- (aspp.west);
+
+  \node[ddec, anchor=west] (low) at (4.4,\yC) {1$\times$1 conv\enspace 48};
+  \draw[lowskip] (d2.east) -- (low.west);
+  \node[lbl, text=violet!75!black, anchor=south] at ($(d2.east)!0.5!(low.west)+(0,0.05)$) {skip};
+
+  \node[ddec, text width=1.35cm, anchor=west] (fuse) at (6.7,\yC) {concat, 3$\times$3 sep.\ conv 256};
+  \draw[flow] (low.east) -- (fuse.west);
+  \draw[flow] (aspp.east) -| node[pos=0.75, lbl, right, align=left] (uplbl) {bilinear\\up$\times$4\\($\tfrac1{16}\!\to\!\tfrac14$)} (fuse.south);
+
+  \node[head] (dh) at (fuse.north |- 0,\yA) {1$\times$1 conv $\to$ 25, up$\times$4};
+  \draw[flow] (fuse.north) -- (dh.south);
+\end{scope}
+\node[panel, fit=(din)(d5)(aspp)(dh)(fuse)(uplbl)] (pb) {};
+\node[ptitle] at (pb.north west) {(b) DeepLabV3+};
+
+% Legend line under the panels.
+\node[lbl, anchor=north west, font=\scriptsize] at ($(pa.west |- pb.south)+(0,-0.08)$)
+  {Encoder blocks: name, resolution, output channels for ResNet-18 | ResNet-50. Pale blocks: computed but not used by the decoder.};
+\end{tikzpicture}

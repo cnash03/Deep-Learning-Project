@@ -1,0 +1,109 @@
+\section{Discussion and Future Work}
+\label{sec:discussion}
+
+% Risk table (Section VII-A) defined here so the full-width float lands before the references.
+\begin{table*}[t]
+  \centering
+  \caption{Updated risk and ethics reflection: anticipated (A) and newly emerged (N) issues and how each was handled.}
+  \label{tab:risks}
+  \footnotesize
+  \begin{tabular}{@{}p{2.9cm} p{6.7cm} p{7.2cm}@{}}
+    \toprule
+    Issue & What emerged & How it was managed \\
+    \midrule
+    Class imbalance (A) &
+      Worse than expected: 6,382:1 between \emph{tree} and \emph{sign};
+      safety classes 1.1\% of training pixels. &
+      Four imbalance-aware losses vs.\ CE; train-only median-frequency weights,
+      clipped at 50; per-class IoU reported. \\
+    Split shift (N) &
+      \emph{Bridge} only in test; validation lacks four classes; test is
+      hazard-heavy (safety classes 10.3\% vs.\ 1.1\%), driven by \emph{creek};
+      val closer to train than to test. &
+      Official split kept for comparability; \emph{bridge} excluded from headline
+      mIoU but reported; val and test reported separately; test per-class IoU;
+      test guarded by a flag and used once. \\
+    Leakage and labels (A) &
+      Labeled frames are near-duplicates (every fifth video frame); coarse
+      polygons, wires labeled \emph{tree}, sticks labeled \emph{log},
+      near-identical concrete/rock-bed colors. &
+      Sequence-level split verified (20-frame discrepancy with~\cite{wigness2019rugd}
+      disclosed); boundary-band analysis (Section~\ref{sec:error}); palette
+      caveat in captions. \\
+    Compute (A) &
+      Apple M1 Pro too slow at $512^2$ and unstable in validation; Colab T4
+      sessions capped at about 12\,h. &
+      $384^2$/25 epochs for \emph{all} runs; mixed precision on T4; per-epoch
+      checkpoints on Drive with automatic resume (Section~\ref{sec:compute}).
+      Outcome: quota ran out before 3 of 4 seed reruns, and four checkpoints
+      were lost to a storage mishap; disclosed, and the selected configuration's
+      replicate used for test. \\
+    Domain shift (A) &
+      Different vehicle, viewpoint, and label mix in RELLIS-3D; \emph{mud} has
+      no RUGD counterpart. &
+      Group map fixed before evaluation; mud ignored in the headline score with
+      a sensitivity check; zero-shot only. Outcome: group mIoU fell from 60.0\% to
+      43.4\%; ground and water transfer worst (Section~\ref{sec:res_rellis}). \\
+    Safety, dual use, licensing &
+      Rare hazards are the most likely misses; Army-funded data;
+      RELLIS-3D is CC BY-NC-SA 3.0. &
+      Rare-class IoU reported; models presented as research artifacts;
+      non-commercial use; no redistribution of images. \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\subsection{What Worked}
+
+Adding a Dice term to the loss was the most useful single change: about 3
+points of GT-present validation mIoU over CE (Section~\ref{sec:res_pretrain}),
+concentrated on water, log, container, and concrete, with frequent classes
+and pixel accuracy unchanged. Because Dice normalizes per class over the
+batch, a rare class's gradient no longer scales with its pixel count, which
+is the imbalance a pixel-averaged loss suffers from. ImageNet pretraining was
+the largest single factor (about 6 points) and mattered most for the same
+rare objects. The DeepLabV3+ decoder helped moderately (about 2 points),
+mainly on objects whose extent needs multi-scale context, such as vehicles
+and picnic tables.
+
+\subsection{What Did Not Work}
+
+Median-frequency weighted CE hurt across the board ($-9.6$ validation mIoU,
+$-5.0$ pixel accuracy): weights up to 50 made the model over-predict rare
+classes, so their false positives grew faster than their true positives.
+Deepening the encoder from ResNet-18 to ResNet-50 bought less than seed
+noise. \emph{Dirt}, \emph{sign}, and \emph{person} stayed near zero under
+every loss: dirt is 0.13\% of training pixels and visually close to mulch and
+sand, and signs and people are tiny at $384^2$. Best-epoch selection on a
+noisy, incomplete validation split was itself a weakness. Under our
+pre-registered rule, Dice alone looked 2 points worse than CE+Dice, when on
+the classes validation actually contains the two are tied. The validation-to-test gap (7.5 points for the final model) was
+concentrated in one scene: creek, whose clear stream the model reads as mulch,
+caused 80\% of test errors, and without it test mIoU (49.3\%) matches
+validation. A validation split with no flowing water could not warn us. Some limitations
+are structural rather than methodological. Validation lacks four classes, so
+model selection cannot reward improvements on \emph{sand}, \emph{rock-bed},
+\emph{bicycle}, or \emph{bridge}, and its class mix is closer to training
+than to test, so it is an optimistic proxy. The test split's rare hazards come
+almost entirely from one sequence, which makes their IoU a high-variance
+estimate. The reduced $384^2$, 25-epoch schedule
+(Section~\ref{sec:compute}) limits thin-structure accuracy and may understate
+what each configuration can reach. With two seeds for one
+configuration (the other planned reruns did not fit the free GPU quota),
+we can bound run-to-run noise only roughly, and the test results for the
+selected configuration come from its seed-1 replicate.
+
+\subsection{Future Work}
+
+(i)~Train at native resolution or with sliding-window inference to recover
+thin obstacles. (ii)~Re-split or use sequence-level cross-validation so that
+validation covers every trainable class and matches the test class mix.
+(iii)~Exploit temporal consistency across RUGD's video frames. (iv)~Compare
+transformer backbones and group-aware objectives such as
+GA-Nav~\cite{guan2022ganav}. (v)~Calibrate uncertainty so a planner can treat
+low-confidence water or obstacle pixels conservatively. (vi)~Fine-tune on a
+small RELLIS-3D subset, drawn by sequence rather than by frame, to measure how
+much target data closes the cross-dataset gap, which was largest for ground
+and water (Section~\ref{sec:res_rellis}). (vii)~Add water-specific cues, such
+as specular-reflection or temporal-flicker features, or a small labeled set
+of streams, since appearance alone failed on clear, shallow water.

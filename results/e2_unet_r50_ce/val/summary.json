@@ -1,0 +1,64 @@
+{
+  "run": "e2_unet_r50_ce",
+  "split": "val",
+  "ckpt": "best.pt",
+  "ckpt_epoch": 22,
+  "n_images": 733,
+  "git_commit_trained": "ccd46cd",
+  "group_miou": 0.7676687383137021,
+  "group_pixel_acc": 0.9284895062446594,
+  "miou": 0.37701147507629557,
+  "miou_incl_excluded": 0.3770114750762957,
+  "miou_gt_present": 0.4147126225839252,
+  "miou_excluded_classes": [
+    "bridge"
+  ],
+  "pixel_acc": 0.9076598882675171,
+  "boundary_band": {
+    "definition": "band(K) = GT pixels whose (2K+1)x(2K+1) window contains another label (incl. void/ignore), on the resized eval masks; 'interior' excludes the band, 'band' scores only band pixels. mIoU uses the same class exclusions as the headline.",
+    "img_size": 384,
+    "k=1": {
+      "k": 1,
+      "band_pixel_fraction": 0.07269544673656825,
+      "error_fraction_in_band": 0.3064730748952894,
+      "interior": {
+        "miou": 0.40950522975133924,
+        "pixel_acc": 0.930939257144928
+      },
+      "band": {
+        "miou": 0.1859225022459582,
+        "pixel_acc": 0.6107080578804016
+      }
+    },
+    "k=3": {
+      "k": 3,
+      "band_pixel_fraction": 0.1696353884266883,
+      "error_fraction_in_band": 0.49854900408255826,
+      "interior": {
+        "miou": 0.42681104179064044,
+        "pixel_acc": 0.9442364573478699
+      },
+      "band": {
+        "miou": 0.25157546250637874,
+        "pixel_acc": 0.7286175489425659
+      }
+    },
+    "k=5": {
+      "k": 5,
+      "band_pixel_fraction": 0.24004849217440813,
+      "error_fraction_in_band": 0.5889336134906179,
+      "interior": {
+        "miou": 0.46827020251487506,
+        "pixel_acc": 0.9500522017478943
+      },
+      "band": {
+        "miou": 0.28666599769021356,
+        "pixel_acc": 0.7734532356262207
+      }
+    }
+  },
+  "per_sequence_miou": {
+    "park-8": 0.2891427189620731,
+    "trail-5": 0.27422424762632874
+  }
+}
